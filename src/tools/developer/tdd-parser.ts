@@ -9,7 +9,7 @@ export function parseTdd(filePath: string): TddType[] {
   const content = readFileSync(filePath, 'utf-8');
   const types: TddType[] = [];
   // Parse **typename:** blocks followed by - fieldname (type) lines
-  const typeBlockRegex = /\*\*(\w+):\*\*\s*(?:\([^)]*\))?\n((?:\s*-\s+.+\n?)*)/g;
+  const typeBlockRegex = /\*\*([\w ]+):\*\*\s*(?:\([^)]*\))?\n((?:\s*-\s+.+\n?)*)/g;
   let match;
   while ((match = typeBlockRegex.exec(content)) !== null) {
     const typeName = match[1];

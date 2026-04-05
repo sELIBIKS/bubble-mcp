@@ -3,6 +3,7 @@ import type { ToolDefinition } from '../../types.js';
 import type { BubbleSchemaResponse, BubbleRecord } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
 import { EXCLUDED_FIELDS } from '../../shared/constants.js';
+import type { SearchResponse } from '../../shared/types.js';
 
 const UNIQUE_RATIO_THRESHOLD = 0.3;
 const MAX_UNIQUE_VALUES = 20;
@@ -15,12 +16,6 @@ interface OptionSetCandidate {
   total_records: number;
   sample_values: string[];
   reason: string;
-}
-
-interface SearchResponse {
-  response?: {
-    results?: BubbleRecord[];
-  };
 }
 
 export function createOptionSetAuditTool(client: BubbleClient): ToolDefinition {
