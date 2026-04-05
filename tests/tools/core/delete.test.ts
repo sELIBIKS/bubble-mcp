@@ -30,7 +30,7 @@ describe('bubble_delete', () => {
     const result = await tool.handler({ dataType: 'order', id: 'ord1' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
+    expect(data.operation).toBe('delete');
     expect(data.id).toBe('ord1');
     expect(data.operation).toBe('delete');
     expect(result.isError).toBeUndefined();

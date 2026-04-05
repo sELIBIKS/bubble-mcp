@@ -30,7 +30,7 @@ describe('bubble_update', () => {
     const result = await tool.handler({ dataType: 'user', id: 'abc123', fields: { name: 'Updated' } });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
+    expect(data.operation).toBe('update');
     expect(data.id).toBe('abc123');
     expect(data.operation).toBe('update');
     expect(result.isError).toBeUndefined();

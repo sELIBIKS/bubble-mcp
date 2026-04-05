@@ -23,7 +23,7 @@ export function createTddValidateTool(client: BubbleClient): ToolDefinition {
     },
     async handler(args) {
       try {
-        const tddPath = validateFilePath(args.tdd_path as string);
+        const tddPath = validateFilePath(args.tdd_path as string, process.cwd());
         const tddTypes = parseTdd(tddPath);
 
         const schema = await client.get<BubbleSchemaResponse>('/meta');

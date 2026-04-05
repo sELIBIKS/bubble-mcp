@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { writeFileSync, unlinkSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createTddValidateTool } from '../../../src/tools/developer/tdd-validate.js';
 import type { BubbleClient } from '../../../src/bubble-client.js';
@@ -53,7 +52,7 @@ describe('bubble_tdd_validate', () => {
   });
 
   it('detects missing fields from TDD', async () => {
-    tempFile = join(tmpdir(), `tdd-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `tdd-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {
@@ -69,7 +68,7 @@ describe('bubble_tdd_validate', () => {
   });
 
   it('detects extra fields in live not in TDD', async () => {
-    tempFile = join(tmpdir(), `tdd-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `tdd-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {
@@ -85,7 +84,7 @@ describe('bubble_tdd_validate', () => {
   });
 
   it('returns conformance_percent, tdd_types_count, live_types_count', async () => {
-    tempFile = join(tmpdir(), `tdd-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `tdd-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {
@@ -103,7 +102,7 @@ describe('bubble_tdd_validate', () => {
 
   it('detects missing types', async () => {
     const tddWithNewType = TDD_CONTENT + '\n**Payment:**\n- amount (number)\n';
-    tempFile = join(tmpdir(), `tdd-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `tdd-test-${Date.now()}.md`);
     writeFileSync(tempFile, tddWithNewType, 'utf-8');
 
     const mockClient = {
@@ -118,7 +117,7 @@ describe('bubble_tdd_validate', () => {
   });
 
   it('propagates errors from client', async () => {
-    tempFile = join(tmpdir(), `tdd-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `tdd-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {

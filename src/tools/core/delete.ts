@@ -25,7 +25,7 @@ export function createDeleteTool(client: BubbleClient): ToolDefinition {
         const dataType = validateIdentifier(args.dataType as string, 'dataType');
         const id = validateIdentifier(args.id as string, 'id');
         await client.delete(`/obj/${dataType}/${id}`);
-        return successResult({ success: true, id, operation: 'delete' });
+        return successResult({ id, operation: 'delete' });
       } catch (error) {
         return handleToolError(error);
       }

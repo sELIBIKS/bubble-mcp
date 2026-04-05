@@ -3,3 +3,5 @@ dist/
 .env
 bubble.config.json
 *.tgz
+tdd-test-*.md
+migration-test-*.md

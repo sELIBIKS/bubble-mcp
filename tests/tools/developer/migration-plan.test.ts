@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { writeFileSync, unlinkSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createMigrationPlanTool } from '../../../src/tools/developer/migration-plan.js';
 import type { BubbleClient } from '../../../src/bubble-client.js';
@@ -51,7 +50,7 @@ describe('bubble_migration_plan', () => {
   });
 
   it('generates add_field steps for new fields on existing types', async () => {
-    tempFile = join(tmpdir(), `migration-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `migration-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {
@@ -68,7 +67,7 @@ describe('bubble_migration_plan', () => {
   });
 
   it('generates create_type steps for new types', async () => {
-    tempFile = join(tmpdir(), `migration-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `migration-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {
@@ -85,7 +84,7 @@ describe('bubble_migration_plan', () => {
   });
 
   it('generates remove_field flags for live fields not in TDD', async () => {
-    tempFile = join(tmpdir(), `migration-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `migration-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {
@@ -102,7 +101,7 @@ describe('bubble_migration_plan', () => {
   });
 
   it('returns total_steps and summary', async () => {
-    tempFile = join(tmpdir(), `migration-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `migration-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {
@@ -130,7 +129,7 @@ describe('bubble_migration_plan', () => {
 **Order:**
 - total (number)
 `;
-    tempFile = join(tmpdir(), `migration-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `migration-test-${Date.now()}.md`);
     writeFileSync(tempFile, tddWithDep, 'utf-8');
 
     // Both types are new
@@ -154,7 +153,7 @@ describe('bubble_migration_plan', () => {
   });
 
   it('propagates errors from client', async () => {
-    tempFile = join(tmpdir(), `migration-test-${Date.now()}.md`);
+    tempFile = join(process.cwd(), `migration-test-${Date.now()}.md`);
     writeFileSync(tempFile, TDD_CONTENT, 'utf-8');
 
     const mockClient = {

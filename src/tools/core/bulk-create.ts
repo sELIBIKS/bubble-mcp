@@ -33,11 +33,9 @@ export function createBulkCreateTool(client: BubbleClient): ToolDefinition {
               {
                 type: 'text',
                 text: JSON.stringify({
-                  success: false,
-                  error: {
-                    code: 400,
-                    message: 'Bulk create limit exceeded: maximum 1000 records per request.',
-                  },
+                  error: 'Bulk create limit exceeded: maximum 1000 records per request.',
+                  code: 400,
+                  hint: 'Split records into batches of 1000 or fewer.',
                 }),
               },
             ],

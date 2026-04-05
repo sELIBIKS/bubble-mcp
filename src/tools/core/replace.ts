@@ -29,7 +29,7 @@ export function createReplaceTool(client: BubbleClient): ToolDefinition {
         const id = validateIdentifier(args.id as string, 'id');
         const fields = args.fields as Record<string, unknown>;
         await client.put(`/obj/${dataType}/${id}`, fields);
-        return successResult({ success: true, id, operation: 'replace' });
+        return successResult({ id, operation: 'replace' });
       } catch (error) {
         return handleToolError(error);
       }

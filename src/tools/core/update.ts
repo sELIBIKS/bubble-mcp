@@ -27,7 +27,7 @@ export function createUpdateTool(client: BubbleClient): ToolDefinition {
         const id = validateIdentifier(args.id as string, 'id');
         const fields = args.fields as Record<string, unknown>;
         await client.patch(`/obj/${dataType}/${id}`, fields);
-        return successResult({ success: true, id, operation: 'update' });
+        return successResult({ id, operation: 'update' });
       } catch (error) {
         return handleToolError(error);
       }

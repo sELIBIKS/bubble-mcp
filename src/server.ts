@@ -85,11 +85,9 @@ export function createServer(config: BubbleConfig): {
               {
                 type: 'text' as const,
                 text: JSON.stringify({
-                  success: false,
-                  error: {
-                    code: 429,
-                    message: `Rate limit exceeded (${config.rateLimit} req/min). Try again shortly.`,
-                  },
+                  error: `Rate limit exceeded (${config.rateLimit} req/min). Try again shortly.`,
+                  code: 429,
+                  hint: 'Wait a moment and try again, or reduce request frequency.',
                 }),
               },
             ],

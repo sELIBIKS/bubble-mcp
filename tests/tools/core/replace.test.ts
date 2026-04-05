@@ -30,7 +30,7 @@ describe('bubble_replace', () => {
     const result = await tool.handler({ dataType: 'product', id: 'prod1', fields: { name: 'New' } });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
+    expect(data.operation).toBe('replace');
     expect(data.id).toBe('prod1');
     expect(data.operation).toBe('replace');
     expect(result.isError).toBeUndefined();

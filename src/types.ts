@@ -10,24 +10,6 @@ export interface BubbleConfig {
   rateLimit: number;
 }
 
-export interface BubbleResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: BubbleError;
-}
-
-export interface BubbleError {
-  code: number;
-  message: string;
-  bubbleStatus?: string;
-}
-
-export interface BubbleSearchResponse {
-  cursor: number;
-  count: number;
-  remaining: number;
-  results: BubbleRecord[];
-}
 
 export interface BubbleRecord {
   _id: string;
@@ -53,11 +35,6 @@ export interface BubbleFieldDef {
   display?: string;
 }
 
-export interface Constraint {
-  key: string;
-  constraint_type: string;
-  value?: unknown;
-}
 
 export interface ToolAnnotations {
   readOnlyHint?: boolean;
