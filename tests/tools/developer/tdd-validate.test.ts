@@ -64,8 +64,7 @@ describe('bubble_tdd_validate', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    const missingFields = data.data.missing_fields as Array<{ type: string; field: string }>;
+    const missingFields = data.missing_fields as Array<{ type: string; field: string }>;
     expect(missingFields.some(f => f.field === 'age')).toBe(true);
   });
 
@@ -81,7 +80,7 @@ describe('bubble_tdd_validate', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    const extraFields = data.data.extra_fields as Array<{ type: string; field: string }>;
+    const extraFields = data.extra_fields as Array<{ type: string; field: string }>;
     expect(extraFields.some(f => f.field === 'extra_field')).toBe(true);
   });
 
@@ -97,9 +96,9 @@ describe('bubble_tdd_validate', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    expect(typeof data.data.conformance_percent).toBe('number');
-    expect(data.data.tdd_types_count).toBe(2);
-    expect(data.data.live_types_count).toBe(2);
+    expect(typeof data.conformance_percent).toBe('number');
+    expect(data.tdd_types_count).toBe(2);
+    expect(data.live_types_count).toBe(2);
   });
 
   it('detects missing types', async () => {
@@ -115,7 +114,7 @@ describe('bubble_tdd_validate', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.missing_types).toContain('Payment');
+    expect(data.missing_types).toContain('Payment');
   });
 
   it('propagates errors from client', async () => {

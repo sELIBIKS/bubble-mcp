@@ -39,8 +39,7 @@ describe('bubble_schema_summary', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    const rels = data.data.relationships as Array<{ from: string; field: string; to: string }>;
+    const rels = data.relationships as Array<{ from: string; field: string; to: string }>;
     const directRel = rels.find(r => r.from === 'order' && r.field === 'user_ref');
     expect(directRel).toBeDefined();
     expect(directRel?.to).toBe('user');
@@ -55,7 +54,7 @@ describe('bubble_schema_summary', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const rels = data.data.relationships as Array<{ from: string; field: string; to: string }>;
+    const rels = data.relationships as Array<{ from: string; field: string; to: string }>;
     const listRel = rels.find(r => r.from === 'order' && r.field === 'tags');
     expect(listRel).toBeDefined();
     expect(listRel?.to).toBe('tag');
@@ -70,7 +69,7 @@ describe('bubble_schema_summary', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const types = data.data.types as Array<{ name: string; fieldCount: number; fields: string[] }>;
+    const types = data.types as Array<{ name: string; fieldCount: number; fields: string[] }>;
     const userType = types.find(t => t.name === 'user');
     expect(userType?.fieldCount).toBe(2);
     const orderType = types.find(t => t.name === 'order');
@@ -86,9 +85,9 @@ describe('bubble_schema_summary', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.total_types).toBe(3);
-    expect(data.data.total_fields).toBe(6); // 2 + 3 + 1
-    expect(data.data.total_relationships).toBe(2);
+    expect(data.total_types).toBe(3);
+    expect(data.total_fields).toBe(6); // 2 + 3 + 1
+    expect(data.total_relationships).toBe(2);
   });
 
   it('calls /meta endpoint', async () => {
@@ -112,6 +111,6 @@ describe('bubble_schema_summary', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

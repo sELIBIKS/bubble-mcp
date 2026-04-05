@@ -19,11 +19,10 @@ describe('bubble_wu_estimate', () => {
     const result = await tool.handler({ dataType: 'order', operation: 'create' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.estimated_wu).toBe(0.5);
-    expect(data.data.category).toBe('low');
-    expect(data.data.operation).toBe('create');
-    expect(data.data.dataType).toBe('order');
+    expect(data.estimated_wu).toBe(0.5);
+    expect(data.category).toBe('low');
+    expect(data.operation).toBe('create');
+    expect(data.dataType).toBe('order');
   });
 
   it('scales WU by 2 for datasets >10k records', async () => {
@@ -35,8 +34,8 @@ describe('bubble_wu_estimate', () => {
     const result = await tool.handler({ dataType: 'order', operation: 'search' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.estimated_wu).toBeGreaterThanOrEqual(0.6);
-    expect(data.data.suggestions.length).toBeGreaterThan(0);
+    expect(data.estimated_wu).toBeGreaterThanOrEqual(0.6);
+    expect(data.suggestions.length).toBeGreaterThan(0);
   });
 
   it('scales WU by 3 for datasets >50k records', async () => {
@@ -48,7 +47,7 @@ describe('bubble_wu_estimate', () => {
     const result = await tool.handler({ dataType: 'order', operation: 'search' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.estimated_wu).toBeGreaterThanOrEqual(0.9);
+    expect(data.estimated_wu).toBeGreaterThanOrEqual(0.9);
   });
 
   it('flags text contains on large datasets', async () => {
@@ -64,7 +63,7 @@ describe('bubble_wu_estimate', () => {
     });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.suggestions.some((s: string) => s.includes('contains'))).toBe(true);
+    expect(data.suggestions.some((s: string) => s.includes('contains'))).toBe(true);
   });
 
   it('returns category low for small operations', async () => {
@@ -76,7 +75,7 @@ describe('bubble_wu_estimate', () => {
     const result = await tool.handler({ dataType: 'user', operation: 'search' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.category).toBe('low');
+    expect(data.category).toBe('low');
   });
 
   it('propagates errors gracefully from client', async () => {
@@ -89,6 +88,6 @@ describe('bubble_wu_estimate', () => {
     const data = JSON.parse(result.content[0].text);
 
     // delete doesn't probe, should succeed
-    expect(data.success).toBe(true);
+    expect(result.isError).toBeUndefined();
   });
 });

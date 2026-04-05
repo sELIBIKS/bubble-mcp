@@ -57,9 +57,8 @@ describe('bubble_find_orphans', () => {
     const result = await tool.handler({ dataType: 'order' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.total_orphans).toBe(1);
-    const orphans = data.data.orphans as Array<{ record_id: string; field: string; referenced_type: string }>;
+    expect(data.total_orphans).toBe(1);
+    const orphans = data.orphans as Array<{ record_id: string; field: string; referenced_type: string }>;
     expect(orphans[0].record_id).toBe('order-2');
     expect(orphans[0].field).toBe('user_ref');
     expect(orphans[0].referenced_type).toBe('user');
@@ -88,8 +87,8 @@ describe('bubble_find_orphans', () => {
     const result = await tool.handler({ dataType: 'order' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.total_orphans).toBe(0);
-    expect(data.data.orphans).toHaveLength(0);
+    expect(data.total_orphans).toBe(0);
+    expect(data.orphans).toHaveLength(0);
   });
 
   it('skips null/empty reference field values', async () => {
@@ -119,7 +118,7 @@ describe('bubble_find_orphans', () => {
     const result = await tool.handler({ dataType: 'order' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.total_orphans).toBe(0);
+    expect(data.total_orphans).toBe(0);
   });
 
   it('uses sample_size param in query', async () => {
@@ -150,7 +149,7 @@ describe('bubble_find_orphans', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(typeof data.data.scanned_types).toBe('number');
+    expect(typeof data.scanned_types).toBe('number');
   });
 
   it('propagates errors from client', async () => {
@@ -163,6 +162,6 @@ describe('bubble_find_orphans', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

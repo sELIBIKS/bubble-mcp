@@ -37,6 +37,8 @@ export function createFindOrphansTool(client: BubbleClient): ToolDefinition {
         const filterType = args.dataType ? validateIdentifier(args.dataType as string, 'dataType') : undefined;
         const orphans: OrphanRecord[] = [];
         let scannedTypes = 0;
+        let apiCalls = 0;
+        const MAX_API_CALLS = 500;
 
         const typesToScan = filterType
           ? filterType in getTypes
@@ -64,10 +66,13 @@ export function createFindOrphansTool(client: BubbleClient): ToolDefinition {
           const records = response.response?.results ?? [];
 
           for (const record of records) {
+            if (apiCalls >= MAX_API_CALLS) break;
             for (const { fieldName, referencedType } of refFields) {
+              if (apiCalls >= MAX_API_CALLS) break;
               const refId = record[fieldName];
               if (!refId || typeof refId !== 'string') continue;
 
+              apiCalls++;
               try {
                 await client.get(`/obj/${referencedType}/${refId}`);
               } catch {
@@ -86,6 +91,8 @@ export function createFindOrphansTool(client: BubbleClient): ToolDefinition {
           scanned_types: scannedTypes,
           orphans,
           total_orphans: orphans.length,
+          api_calls_used: apiCalls,
+          ...(apiCalls >= MAX_API_CALLS ? { capped: true, message: 'Scan stopped at 500 API calls. Use dataType filter to scan specific types.' } : {}),
         });
       } catch (error) {
         return handleToolError(error);

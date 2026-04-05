@@ -22,11 +22,10 @@ describe('bubble_get_environment', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.app_url).toBe('https://myapp.bubbleapps.io');
-    expect(data.data.environment).toBe('development');
-    expect(data.data.mode).toBe('read-only');
-    expect(data.data.rate_limit).toBe(60);
+    expect(data.app_url).toBe('https://myapp.bubbleapps.io');
+    expect(data.environment).toBe('development');
+    expect(data.mode).toBe('read-only');
+    expect(data.rate_limit).toBe(60);
   });
 
   it('does not expose the API token', async () => {
@@ -45,8 +44,8 @@ describe('bubble_get_environment', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.environment).toBe('live');
-    expect(data.data.mode).toBe('admin');
-    expect(data.data.rate_limit).toBe(120);
+    expect(data.environment).toBe('live');
+    expect(data.mode).toBe('admin');
+    expect(data.rate_limit).toBe(120);
   });
 });

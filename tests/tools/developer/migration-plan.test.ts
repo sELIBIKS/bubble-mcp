@@ -62,8 +62,7 @@ describe('bubble_migration_plan', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    const steps = data.data.steps as Array<{ action: string; target: string; details: string }>;
+    const steps = data.steps as Array<{ action: string; target: string; details: string }>;
     const addField = steps.filter(s => s.action === 'add_field');
     expect(addField.some(s => s.details.includes('phone'))).toBe(true);
   });
@@ -80,7 +79,7 @@ describe('bubble_migration_plan', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    const steps = data.data.steps as Array<{ action: string; target: string }>;
+    const steps = data.steps as Array<{ action: string; target: string }>;
     const createType = steps.filter(s => s.action === 'create_type');
     expect(createType.some(s => s.target === 'Order')).toBe(true);
   });
@@ -97,7 +96,7 @@ describe('bubble_migration_plan', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    const steps = data.data.steps as Array<{ action: string; details: string }>;
+    const steps = data.steps as Array<{ action: string; details: string }>;
     const removeField = steps.filter(s => s.action === 'remove_field');
     expect(removeField.some(s => s.details.includes('legacy_field'))).toBe(true);
   });
@@ -114,10 +113,10 @@ describe('bubble_migration_plan', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    expect(typeof data.data.total_steps).toBe('number');
-    expect(data.data.summary).toHaveProperty('add_fields');
-    expect(data.data.summary).toHaveProperty('create_types');
-    expect(data.data.summary).toHaveProperty('remove_fields_flagged');
+    expect(typeof data.total_steps).toBe('number');
+    expect(data.summary).toHaveProperty('add_fields');
+    expect(data.summary).toHaveProperty('create_types');
+    expect(data.summary).toHaveProperty('remove_fields_flagged');
   });
 
   it('places dependency types before dependent types (topological order)', async () => {
@@ -144,7 +143,7 @@ describe('bubble_migration_plan', () => {
     const result = await tool.handler({ tdd_path: tempFile });
     const data = JSON.parse(result.content[0].text);
 
-    const steps = data.data.steps as Array<{ action: string; target: string; order: number }>;
+    const steps = data.steps as Array<{ action: string; target: string; order: number }>;
     const createSteps = steps.filter(s => s.action === 'create_type');
     const orderStep = createSteps.find(s => s.target === 'Order');
     const invoiceStep = createSteps.find(s => s.target === 'Invoice');

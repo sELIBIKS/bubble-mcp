@@ -75,8 +75,7 @@ describe('bubble_compare_environments', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.new_types_in_dev).toContain('new_type');
+    expect(data.new_types_in_dev).toContain('new_type');
   });
 
   it('detects removed types in dev (present in live, not in dev)', async () => {
@@ -88,7 +87,7 @@ describe('bubble_compare_environments', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.removed_in_dev).toContain('removed_type');
+    expect(data.removed_in_dev).toContain('removed_type');
   });
 
   it('detects new fields in dev', async () => {
@@ -100,7 +99,7 @@ describe('bubble_compare_environments', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const newFields = data.data.new_fields as Array<{ dataType: string; field: string }>;
+    const newFields = data.new_fields as Array<{ dataType: string; field: string }>;
     const newField = newFields.find(f => f.dataType === 'user' && f.field === 'new_field');
     expect(newField).toBeDefined();
   });
@@ -114,7 +113,7 @@ describe('bubble_compare_environments', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const changedFields = data.data.changed_fields as Array<{ dataType: string; field: string; dev_type: string; live_type: string }>;
+    const changedFields = data.changed_fields as Array<{ dataType: string; field: string; dev_type: string; live_type: string }>;
     const nameChange = changedFields.find(f => f.dataType === 'user' && f.field === 'name');
     expect(nameChange).toBeDefined();
     expect(nameChange?.dev_type).toBe('text');
@@ -136,8 +135,8 @@ describe('bubble_compare_environments', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.in_sync).toBe(true);
-    expect(data.data.total_changes).toBe(0);
+    expect(data.in_sync).toBe(true);
+    expect(data.total_changes).toBe(0);
   });
 
   it('returns in_sync=false and total_changes > 0 when schemas differ', async () => {
@@ -149,8 +148,8 @@ describe('bubble_compare_environments', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.in_sync).toBe(false);
-    expect(data.data.total_changes).toBeGreaterThan(0);
+    expect(data.in_sync).toBe(false);
+    expect(data.total_changes).toBeGreaterThan(0);
   });
 
   it('propagates errors from client', async () => {
@@ -160,6 +159,6 @@ describe('bubble_compare_environments', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

@@ -41,8 +41,7 @@ describe('bubble_suggest_indexes', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    const suggestions = data.data.suggestions as Array<{ dataType: string; field: string; priority: string }>;
+    const suggestions = data.suggestions as Array<{ dataType: string; field: string; priority: string }>;
     const fkSuggestion = suggestions.find(s => s.dataType === 'order' && s.field === 'customer');
     expect(fkSuggestion).toBeDefined();
     expect(fkSuggestion?.priority).toBe('high');
@@ -61,7 +60,7 @@ describe('bubble_suggest_indexes', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const suggestions = data.data.suggestions as Array<{ dataType: string; field: string }>;
+    const suggestions = data.suggestions as Array<{ dataType: string; field: string }>;
     const dateSuggestion = suggestions.find(s => s.dataType === 'order' && s.field === 'created_at');
     expect(dateSuggestion).toBeDefined();
   });
@@ -78,7 +77,7 @@ describe('bubble_suggest_indexes', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.suggestions.length).toBe(0);
+    expect(data.suggestions.length).toBe(0);
   });
 
   it('returns suggestions sorted by priority (high before medium before low)', async () => {
@@ -93,7 +92,7 @@ describe('bubble_suggest_indexes', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const priorities = (data.data.suggestions as Array<{ priority: string }>).map(s => s.priority);
+    const priorities = (data.suggestions as Array<{ priority: string }>).map(s => s.priority);
     const order = { high: 0, medium: 1, low: 2 };
     for (let i = 1; i < priorities.length; i++) {
       expect(order[priorities[i] as keyof typeof order]).toBeGreaterThanOrEqual(

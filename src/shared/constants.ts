@@ -30,28 +30,30 @@ export function truncateResponse(data: unknown): {
   truncated: boolean;
   truncation_message?: string;
 } {
-  const json = JSON.stringify(data);
-  if (json.length <= CHARACTER_LIMIT) {
+  if (JSON.stringify(data).length <= CHARACTER_LIMIT) {
     return { data, truncated: false };
   }
-  // If it's an object with an array property, try to reduce array size
+  // Iteratively halve the largest array until under limit
   if (typeof data === 'object' && data !== null) {
-    for (const [key, value] of Object.entries(data)) {
-      if (Array.isArray(value) && value.length > 10) {
-        const reduced = value.slice(0, Math.ceil(value.length / 2));
-        const truncated = { ...data, [key]: reduced };
+    let current = data as Record<string, unknown>;
+    for (const [key, value] of Object.entries(current)) {
+      if (!Array.isArray(value) || value.length <= 1) continue;
+      const originalLength = value.length;
+      let reduced = value;
+      while (reduced.length > 1 && JSON.stringify({ ...current, [key]: reduced }).length > CHARACTER_LIMIT) {
+        reduced = reduced.slice(0, Math.ceil(reduced.length / 2));
+      }
+      if (reduced.length < originalLength) {
         return {
-          data: truncated,
+          data: { ...current, [key]: reduced },
           truncated: true,
-          truncation_message: `Response truncated: "${key}" reduced from ${value.length} to ${reduced.length} items. Use pagination or filters to see more.`,
+          truncation_message: `Response truncated: "${key}" reduced from ${originalLength} to ${reduced.length} items. Use pagination or filters to see more.`,
         };
       }
     }
   }
-  // Fallback: return a size message instead of broken JSON
   return {
-    data: `[Response too large to display: ${json.length} characters. Use filters or pagination to reduce results.]`,
+    data: '[Response too large. Use filters or pagination to reduce results.]',
     truncated: true,
-    truncation_message: `Response truncated. Original size: ${json.length} characters.`,
   };
 }

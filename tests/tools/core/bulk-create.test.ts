@@ -39,11 +39,10 @@ describe('bubble_bulk_create', () => {
     const result = await tool.handler({ dataType: 'product', records });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.total).toBe(2);
-    expect(data.data.operation).toBe('bulk_create');
-    expect(data.data.results).toHaveLength(2);
-    expect(data.data.results[0]).toEqual({ status: 'success', id: 'id_A' });
+    expect(data.total).toBe(2);
+    expect(data.operation).toBe('bulk_create');
+    expect(data.results).toHaveLength(2);
+    expect(data.results[0]).toEqual({ status: 'success', id: 'id_A' });
     expect(result.isError).toBeUndefined();
   });
 
@@ -56,7 +55,7 @@ describe('bubble_bulk_create', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
     expect(mockClient.postBulk).not.toHaveBeenCalled();
   });
 
@@ -72,8 +71,7 @@ describe('bubble_bulk_create', () => {
     const result = await tool.handler({ dataType: 'product', records });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.total).toBe(1000);
+    expect(data.total).toBe(1000);
     expect(mockClient.postBulk).toHaveBeenCalled();
   });
 
@@ -87,6 +85,6 @@ describe('bubble_bulk_create', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

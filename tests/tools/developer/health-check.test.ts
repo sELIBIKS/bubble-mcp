@@ -42,15 +42,14 @@ describe('bubble_health_check', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(typeof data.data.score).toBe('number');
-    expect(data.data.score).toBeGreaterThanOrEqual(0);
-    expect(data.data.score).toBeLessThanOrEqual(100);
-    expect(data.data.sections).toHaveProperty('privacy');
-    expect(data.data.sections).toHaveProperty('data_model');
-    expect(Array.isArray(data.data.recommendations)).toBe(true);
-    expect(data.data.recommendations.length).toBeLessThanOrEqual(5);
-    expect(data.data.total_types).toBe(2);
+    expect(typeof data.score).toBe('number');
+    expect(data.score).toBeGreaterThanOrEqual(0);
+    expect(data.score).toBeLessThanOrEqual(100);
+    expect(data.sections).toHaveProperty('privacy');
+    expect(data.sections).toHaveProperty('data_model');
+    expect(Array.isArray(data.recommendations)).toBe(true);
+    expect(data.recommendations.length).toBeLessThanOrEqual(5);
+    expect(data.total_types).toBe(2);
   });
 
   it('privacy section detects sensitive fields', async () => {
@@ -65,7 +64,7 @@ describe('bubble_health_check', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const privacyIssues: string[] = data.data.sections.privacy.issues;
+    const privacyIssues: string[] = data.sections.privacy.issues;
     expect(privacyIssues.some(i => i.includes('password_hash'))).toBe(true);
   });
 
@@ -81,7 +80,7 @@ describe('bubble_health_check', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.sections.privacy.score).toBeLessThan(100);
+    expect(data.sections.privacy.score).toBeLessThan(100);
   });
 
   it('data_model section detects dead fields', async () => {
@@ -104,7 +103,7 @@ describe('bubble_health_check', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const dmIssues: string[] = data.data.sections.data_model.issues;
+    const dmIssues: string[] = data.sections.data_model.issues;
     expect(dmIssues.length).toBeGreaterThan(0);
   });
 
@@ -118,6 +117,6 @@ describe('bubble_health_check', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

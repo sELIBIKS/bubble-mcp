@@ -45,10 +45,9 @@ describe('bubble_record_validator', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.empty_records).toBe(1);
-    expect(data.data.dataType).toBe('user');
-    expect(data.data.records_sampled).toBe(2);
+    expect(data.empty_records).toBe(1);
+    expect(data.dataType).toBe('user');
+    expect(data.records_sampled).toBe(2);
   });
 
   it('detects empty/null individual fields as issues', async () => {
@@ -72,8 +71,8 @@ describe('bubble_record_validator', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.total_issues).toBeGreaterThan(0);
-    const issues = data.data.issues as Array<{ record_id: string; field: string }>;
+    expect(data.total_issues).toBeGreaterThan(0);
+    const issues = data.issues as Array<{ record_id: string; field: string }>;
     const nullField = issues.find(i => i.field === 'name');
     expect(nullField).toBeDefined();
   });
@@ -99,8 +98,8 @@ describe('bubble_record_validator', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.empty_records).toBe(0);
-    expect(data.data.total_issues).toBe(0);
+    expect(data.empty_records).toBe(0);
+    expect(data.total_issues).toBe(0);
   });
 
   it('caps issues at 100', async () => {
@@ -124,7 +123,7 @@ describe('bubble_record_validator', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.issues.length).toBeLessThanOrEqual(100);
+    expect(data.issues.length).toBeLessThanOrEqual(100);
   });
 
   it('uses sample_size param', async () => {
@@ -153,6 +152,6 @@ describe('bubble_record_validator', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

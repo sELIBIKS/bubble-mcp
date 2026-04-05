@@ -53,9 +53,8 @@ describe('bubble_field_usage', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.dead_fields).toContain('bio');
-    expect(data.data.dead_fields).toContain('phone');
+    expect(data.dead_fields).toContain('bio');
+    expect(data.dead_fields).toContain('phone');
   });
 
   it('does not flag well-populated fields as dead', async () => {
@@ -75,8 +74,8 @@ describe('bubble_field_usage', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.dead_fields).not.toContain('bio');
-    expect(data.data.dead_fields).not.toContain('phone');
+    expect(data.dead_fields).not.toContain('bio');
+    expect(data.dead_fields).not.toContain('phone');
   });
 
   it('returns fields sorted by population_rate ascending', async () => {
@@ -96,7 +95,7 @@ describe('bubble_field_usage', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    const fields = data.data.fields as Array<{ name: string; population_rate: number }>;
+    const fields = data.fields as Array<{ name: string; population_rate: number }>;
     const rates = fields.map(f => f.population_rate);
     for (let i = 1; i < rates.length; i++) {
       expect(rates[i]).toBeGreaterThanOrEqual(rates[i - 1]);
@@ -117,7 +116,7 @@ describe('bubble_field_usage', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    const fields = data.data.fields as Array<{ name: string }>;
+    const fields = data.fields as Array<{ name: string }>;
     const fieldNames = fields.map(f => f.name);
     expect(fieldNames).not.toContain('_id');
     expect(fieldNames).not.toContain('Created Date');
@@ -144,7 +143,7 @@ describe('bubble_field_usage', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    const fields = data.data.fields as Array<{ name: string; sample_values: unknown[] }>;
+    const fields = data.fields as Array<{ name: string; sample_values: unknown[] }>;
     const bioField = fields.find(f => f.name === 'bio');
     expect(bioField?.sample_values.length).toBeLessThanOrEqual(3);
   });
@@ -163,8 +162,8 @@ describe('bubble_field_usage', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.dataType).toBe('user');
-    expect(data.data.records_sampled).toBe(2);
+    expect(data.dataType).toBe('user');
+    expect(data.records_sampled).toBe(2);
   });
 
   it('propagates errors from client', async () => {
@@ -177,6 +176,6 @@ describe('bubble_field_usage', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

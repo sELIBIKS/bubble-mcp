@@ -36,10 +36,9 @@ describe('bubble_cleanup_test_data', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.deleted.user).toBe(2);
-    expect(data.data.deleted.order).toBe(1);
-    expect(data.data.total_failures).toBe(0);
+    expect(data.deleted.user).toBe(2);
+    expect(data.deleted.order).toBe(1);
+    expect(data.total_failures).toBe(0);
   });
 
   it('clears the tracker after cleanup', async () => {
@@ -64,9 +63,8 @@ describe('bubble_cleanup_test_data', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.total_failures).toBe(2);
-    expect(data.data.failures.length).toBe(2);
+    expect(data.total_failures).toBe(2);
+    expect(data.failures.length).toBe(2);
   });
 
   it('handles empty tracker gracefully', async () => {
@@ -79,7 +77,6 @@ describe('bubble_cleanup_test_data', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.total_failures).toBe(0);
+    expect(data.total_failures).toBe(0);
   });
 });

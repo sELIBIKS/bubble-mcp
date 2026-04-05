@@ -28,10 +28,9 @@ describe('bubble_search_all', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.results).toHaveLength(3);
-    expect(data.data.total).toBe(3);
-    expect(data.data.capped).toBe(false);
+    expect(data.results).toHaveLength(3);
+    expect(data.total).toBe(3);
+    expect(data.capped).toBe(false);
   });
 
   it('auto-paginates across multiple pages', async () => {
@@ -52,9 +51,9 @@ describe('bubble_search_all', () => {
     const result = await tool.handler({ dataType: 'order' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.results).toHaveLength(150);
-    expect(data.data.total).toBe(150);
-    expect(data.data.capped).toBe(false);
+    expect(data.results).toHaveLength(150);
+    expect(data.total).toBe(150);
+    expect(data.capped).toBe(false);
     expect(mockClient.get).toHaveBeenCalledTimes(2);
   });
 
@@ -76,8 +75,8 @@ describe('bubble_search_all', () => {
     const result = await tool.handler({ dataType: 'order', max_records: 150 });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.results.length).toBeLessThanOrEqual(150);
-    expect(data.data.capped).toBe(true);
+    expect(data.results.length).toBeLessThanOrEqual(150);
+    expect(data.capped).toBe(true);
   });
 
   it('passes constraints to the API', async () => {
@@ -133,6 +132,6 @@ describe('bubble_search_all', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

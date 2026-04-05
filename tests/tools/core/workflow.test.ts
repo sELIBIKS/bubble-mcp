@@ -42,8 +42,7 @@ describe('bubble_trigger_workflow', () => {
     const result = await tool.handler({ workflow_name: 'send_email' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data).toEqual(mockResponse);
+    expect(data).toEqual(mockResponse);
     expect(result.isError).toBeUndefined();
   });
 
@@ -57,6 +56,6 @@ describe('bubble_trigger_workflow', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

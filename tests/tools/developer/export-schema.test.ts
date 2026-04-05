@@ -35,9 +35,8 @@ describe('bubble_export_schema', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(typeof data.data.markdown).toBe('string');
-    expect(data.data.markdown).toContain('# Data Architecture');
+    expect(typeof data.markdown).toBe('string');
+    expect(data.markdown).toContain('# Data Architecture');
   });
 
   it('includes entity summary table with type names', async () => {
@@ -49,8 +48,8 @@ describe('bubble_export_schema', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.markdown).toContain('**user**');
-    expect(data.data.markdown).toContain('**order**');
+    expect(data.markdown).toContain('**user**');
+    expect(data.markdown).toContain('**order**');
   });
 
   it('detects relationships via custom. prefix', async () => {
@@ -62,7 +61,7 @@ describe('bubble_export_schema', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.markdown).toContain('customer -> user');
+    expect(data.markdown).toContain('customer -> user');
   });
 
   it('includes Detailed Field Specifications section', async () => {
@@ -74,9 +73,9 @@ describe('bubble_export_schema', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.markdown).toContain('## Detailed Field Specifications');
-    expect(data.data.markdown).toContain('- email (text)');
-    expect(data.data.markdown).toContain('- total (number)');
+    expect(data.markdown).toContain('## Detailed Field Specifications');
+    expect(data.markdown).toContain('- email (text)');
+    expect(data.markdown).toContain('- total (number)');
   });
 
   it('propagates errors from client', async () => {

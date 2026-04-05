@@ -26,8 +26,7 @@ describe('bubble_get_schema', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(mockClient.get).toHaveBeenCalledWith('/meta');
-    expect(data.success).toBe(true);
-    expect(data.data).toEqual(mockSchema);
+    expect(data).toEqual(mockSchema);
   });
 
   it('propagates errors from client', async () => {
@@ -40,6 +39,6 @@ describe('bubble_get_schema', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

@@ -30,10 +30,9 @@ describe('bubble_workflow_map', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.workflows.length).toBe(2);
-    expect(data.data.total).toBe(2);
-    expect(data.data.workflows[0].name).toBe('send_email');
+    expect(data.workflows.length).toBe(2);
+    expect(data.total).toBe(2);
+    expect(data.workflows[0].name).toBe('send_email');
   });
 
   it('returns empty with message when no api_workflows key', async () => {
@@ -47,10 +46,9 @@ describe('bubble_workflow_map', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.workflows).toEqual([]);
-    expect(data.data.total).toBe(0);
-    expect(typeof data.data.message).toBe('string');
+    expect(data.workflows).toEqual([]);
+    expect(data.total).toBe(0);
+    expect(typeof data.message).toBe('string');
   });
 
   it('propagates errors from client', async () => {

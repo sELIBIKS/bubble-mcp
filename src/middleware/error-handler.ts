@@ -26,13 +26,10 @@ export function handleToolError(error: unknown): ToolResult {
         {
           type: 'text',
           text: JSON.stringify({
-            success: false,
-            error: {
-              code: error.code,
-              message: error.message,
-              bubble_status: error.bubbleStatus,
-              hint: getErrorHint(error.code),
-            },
+            error: error.message,
+            code: error.code,
+            bubble_status: error.bubbleStatus,
+            hint: getErrorHint(error.code),
           }),
         },
       ],
@@ -45,8 +42,8 @@ export function handleToolError(error: unknown): ToolResult {
       {
         type: 'text',
         text: JSON.stringify({
-          success: false,
-          error: { code: 500, message, hint: 'An unexpected error occurred. Check server logs.' },
+          error: message,
+          hint: 'An unexpected error occurred. Check server logs.',
         }),
       },
     ],
@@ -62,14 +59,12 @@ export function successResult(data: unknown): ToolResult {
         {
           type: 'text',
           text: JSON.stringify({
-            success: true,
             data: result.data,
-            truncated: true,
-            truncation_message: result.truncation_message,
+            _truncated: result.truncation_message,
           }),
         },
       ],
     };
   }
-  return { content: [{ type: 'text', text: JSON.stringify({ success: true, data }) }] };
+  return { content: [{ type: 'text', text: JSON.stringify(data) }] };
 }

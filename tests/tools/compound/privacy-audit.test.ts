@@ -46,8 +46,7 @@ describe('bubble_privacy_audit', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    const issues = data.data.issues as Array<{ severity: string; dataType: string; field?: string }>;
+    const issues = data.issues as Array<{ severity: string; dataType: string; field?: string }>;
     const sensitiveIssues = issues.filter(i => i.dataType === 'user' && i.field === 'password_hash');
     expect(sensitiveIssues.length).toBeGreaterThan(0);
     expect(sensitiveIssues[0].severity).toBe('critical');
@@ -62,7 +61,7 @@ describe('bubble_privacy_audit', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const issues = data.data.issues as Array<{ severity: string; dataType: string; field?: string }>;
+    const issues = data.issues as Array<{ severity: string; dataType: string; field?: string }>;
     const piiIssues = issues.filter(i => i.dataType === 'user' && i.field === 'email');
     expect(piiIssues.length).toBeGreaterThan(0);
     expect(piiIssues[0].severity).toBe('warning');
@@ -77,7 +76,7 @@ describe('bubble_privacy_audit', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const issues = data.data.issues as Array<{ severity: string; dataType: string; field?: string }>;
+    const issues = data.issues as Array<{ severity: string; dataType: string; field?: string }>;
     const ccIssues = issues.filter(i => i.dataType === 'payment' && i.field === 'credit_card');
     const cvvIssues = issues.filter(i => i.dataType === 'payment' && i.field === 'cvv');
     expect(ccIssues[0].severity).toBe('critical');
@@ -93,7 +92,7 @@ describe('bubble_privacy_audit', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const issues = data.data.issues as Array<{ type: string; dataType: string }>;
+    const issues = data.issues as Array<{ type: string; dataType: string }>;
     const apiExposureIssues = issues.filter(i => i.type === 'api_write_exposure');
     expect(apiExposureIssues.length).toBeGreaterThan(0);
   });
@@ -108,13 +107,13 @@ describe('bubble_privacy_audit', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(mockClient.get).toHaveBeenCalledWith('/meta');
-    expect(typeof data.data.score).toBe('number');
-    expect(data.data.score).toBeGreaterThanOrEqual(0);
-    expect(data.data.score).toBeLessThanOrEqual(100);
-    expect(data.data.total_types).toBe(3);
-    expect(data.data.summary).toHaveProperty('critical');
-    expect(data.data.summary).toHaveProperty('warnings');
-    expect(data.data.summary).toHaveProperty('info');
+    expect(typeof data.score).toBe('number');
+    expect(data.score).toBeGreaterThanOrEqual(0);
+    expect(data.score).toBeLessThanOrEqual(100);
+    expect(data.total_types).toBe(3);
+    expect(data.summary).toHaveProperty('critical');
+    expect(data.summary).toHaveProperty('warnings');
+    expect(data.summary).toHaveProperty('info');
   });
 
   it('returns score of 100 when no issues found', async () => {
@@ -132,8 +131,8 @@ describe('bubble_privacy_audit', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.data.score).toBe(100);
-    expect(data.data.issues.length).toBe(0);
+    expect(data.score).toBe(100);
+    expect(data.issues.length).toBe(0);
   });
 
   it('propagates errors from client', async () => {
@@ -146,6 +145,6 @@ describe('bubble_privacy_audit', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

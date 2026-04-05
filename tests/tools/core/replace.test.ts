@@ -31,9 +31,8 @@ describe('bubble_replace', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(data.success).toBe(true);
-    expect(data.data.success).toBe(true);
-    expect(data.data.id).toBe('prod1');
-    expect(data.data.operation).toBe('replace');
+    expect(data.id).toBe('prod1');
+    expect(data.operation).toBe('replace');
     expect(result.isError).toBeUndefined();
   });
 
@@ -54,6 +53,6 @@ describe('bubble_replace', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

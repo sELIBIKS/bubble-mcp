@@ -30,9 +30,8 @@ describe('bubble_create', () => {
     const result = await tool.handler({ dataType: 'order', fields: { name: 'Test' } });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data.id).toBe('newid123');
-    expect(data.data.operation).toBe('create');
+    expect(data.id).toBe('newid123');
+    expect(data.operation).toBe('create');
     expect(result.isError).toBeUndefined();
   });
 
@@ -46,6 +45,6 @@ describe('bubble_create', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

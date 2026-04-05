@@ -50,8 +50,7 @@ describe('bubble_option_set_audit', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    const candidates = data.data.should_be_option_sets as Array<{ field: string }>;
+    const candidates = data.should_be_option_sets as Array<{ field: string }>;
     expect(candidates.some(c => c.field === 'status')).toBe(true);
   });
 
@@ -71,7 +70,7 @@ describe('bubble_option_set_audit', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    const candidates = data.data.should_be_option_sets as Array<{ field: string }>;
+    const candidates = data.should_be_option_sets as Array<{ field: string }>;
     expect(candidates.some(c => c.field === 'notes')).toBe(false);
   });
 
@@ -90,7 +89,7 @@ describe('bubble_option_set_audit', () => {
     const result = await tool.handler({});
     const data = JSON.parse(result.content[0].text);
 
-    expect(typeof data.data.total_candidates).toBe('number');
+    expect(typeof data.total_candidates).toBe('number');
   });
 
   it('propagates errors from client', async () => {

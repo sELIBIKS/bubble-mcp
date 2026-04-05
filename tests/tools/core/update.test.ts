@@ -31,9 +31,8 @@ describe('bubble_update', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(data.success).toBe(true);
-    expect(data.data.success).toBe(true);
-    expect(data.data.id).toBe('abc123');
-    expect(data.data.operation).toBe('update');
+    expect(data.id).toBe('abc123');
+    expect(data.operation).toBe('update');
     expect(result.isError).toBeUndefined();
   });
 
@@ -47,6 +46,6 @@ describe('bubble_update', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

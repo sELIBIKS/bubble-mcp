@@ -6,7 +6,6 @@ import { successResult, handleToolError } from '../../middleware/error-handler.j
 interface TypeSummary {
   name: string;
   fieldCount: number;
-  fields: string[];
 }
 
 interface Relationship {
@@ -37,9 +36,9 @@ export function createSchemaSummaryTool(client: BubbleClient): ToolDefinition {
         let totalFields = 0;
 
         for (const [typeName, fields] of Object.entries(getTypes)) {
-          const fieldNames = Object.keys(fields);
-          types.push({ name: typeName, fieldCount: fieldNames.length, fields: fieldNames });
-          totalFields += fieldNames.length;
+          const fieldCount = Object.keys(fields).length;
+          types.push({ name: typeName, fieldCount });
+          totalFields += fieldCount;
 
           for (const [fieldName, fieldDef] of Object.entries(fields)) {
             const fieldType: string = fieldDef.type ?? '';

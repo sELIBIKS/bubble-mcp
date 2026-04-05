@@ -51,9 +51,8 @@ describe('bubble_seed_data', () => {
     });
 
     const data = JSON.parse(result.content[0].text);
-    expect(data.success).toBe(true);
-    expect(data.data.created.user.count).toBe(2);
-    expect(data.data.total).toBe(2);
+    expect(data.created.user.count).toBe(2);
+    expect(data.total).toBe(2);
   });
 
   it('tracks seeded IDs in the tracker', async () => {

@@ -14,6 +14,7 @@ import { createDeleteTool } from './tools/core/delete.js';
 import { createBulkCreateTool } from './tools/core/bulk-create.js';
 import { createTriggerWorkflowTool } from './tools/core/workflow.js';
 import { createEnvironmentTool } from './tools/core/environment.js';
+import { createSwaggerTool } from './tools/core/swagger.js';
 import { createHealthCheckTool } from './tools/developer/health-check.js';
 import { createExportSchemaTool } from './tools/developer/export-schema.js';
 import { createWorkflowMapTool } from './tools/developer/workflow-map.js';
@@ -123,6 +124,7 @@ function getCoreTools(client: BubbleClient, config: BubbleConfig): ToolDefinitio
     createBulkCreateTool(client),
     createTriggerWorkflowTool(client),
     createEnvironmentTool(config),
+    createSwaggerTool(config),
   ];
 }
 

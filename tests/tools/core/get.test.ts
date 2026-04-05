@@ -37,8 +37,7 @@ describe('bubble_get', () => {
     const result = await tool.handler({ dataType: 'user', id: 'abc123' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data).toEqual(mockRecord);
+    expect(data).toEqual(mockRecord);
     expect(result.isError).toBeUndefined();
   });
 
@@ -52,6 +51,6 @@ describe('bubble_get', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });

@@ -1,11 +1,15 @@
 import { resolve, normalize, sep } from 'node:path';
 
-const SAFE_IDENTIFIER = /^[a-zA-Z0-9_ -]+$/;
+const SAFE_NAME = /^[a-zA-Z0-9_ -]+$/;
+const SAFE_RECORD_ID = /^[a-zA-Z0-9_.-]+$/;
 
 export function validateIdentifier(value: string, label: string): string {
-  if (!SAFE_IDENTIFIER.test(value)) {
+  const pattern = label === 'id' ? SAFE_RECORD_ID : SAFE_NAME;
+  if (!pattern.test(value)) {
     throw new Error(
-      `Invalid ${label}: "${value}". Only letters, numbers, underscores, hyphens, and spaces are allowed.`,
+      label === 'id'
+        ? `Invalid ${label}: "${value}". Only alphanumeric characters, underscores, hyphens, and dots are allowed.`
+        : `Invalid ${label}: "${value}". Only letters, numbers, underscores, hyphens, and spaces are allowed.`,
     );
   }
   return value;

@@ -40,8 +40,7 @@ describe('bubble_search', () => {
     const result = await tool.handler({ dataType: 'user' });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.success).toBe(true);
-    expect(data.data).toEqual(mockResults);
+    expect(data).toEqual(mockResults);
   });
 
   it('includes default limit and cursor in URL params', async () => {
@@ -93,6 +92,6 @@ describe('bubble_search', () => {
     const data = JSON.parse(result.content[0].text);
 
     expect(result.isError).toBe(true);
-    expect(data.success).toBe(false);
+    expect(data.error).toBeDefined();
   });
 });
