@@ -7,6 +7,12 @@ export function createExportSchemaTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_export_schema',
     mode: 'read-only',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Exports the Bubble.io schema as TDD-format markdown, including an entity summary table and detailed field specifications.',
     inputSchema: {},
@@ -25,9 +31,7 @@ export function createExportSchemaTool(client: BubbleClient): ToolDefinition {
             .filter(([, def]) => def.type?.startsWith('custom.'))
             .map(([fieldName, def]) => `${fieldName} -> ${def.type.slice('custom.'.length)}`)
             .join(', ');
-          lines.push(
-            `| **${typeName}** | ${fieldCount} fields | ${relationships || 'none'} |`
-          );
+          lines.push(`| **${typeName}** | ${fieldCount} fields | ${relationships || 'none'} |`);
         }
 
         lines.push('');

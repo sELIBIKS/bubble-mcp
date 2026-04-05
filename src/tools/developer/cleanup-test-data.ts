@@ -4,11 +4,17 @@ import { successResult, handleToolError } from '../../middleware/error-handler.j
 
 export function createCleanupTestDataTool(
   client: BubbleClient,
-  seedTracker: SeedTracker
+  seedTracker: SeedTracker,
 ): ToolDefinition {
   return {
     name: 'bubble_cleanup_test_data',
     mode: 'admin',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Deletes all test records previously created by bubble_seed_data. Processes in reverse dependency order.',
     inputSchema: {},

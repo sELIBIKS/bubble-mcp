@@ -1,39 +1,40 @@
+import { z } from 'zod';
 import type { BubbleClient } from '../../bubble-client.js';
 import type { ToolDefinition } from '../../types.js';
 import type { BubbleRecord } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
+import type { SearchResponse } from '../../shared/types.js';
+import { validateIdentifier } from '../../shared/validation.js';
 
 const PAGE_SIZE = 100;
 const DEFAULT_MAX_RECORDS = 1000;
 const HARD_MAX_RECORDS = 10000;
 
-interface SearchResponse {
-  response: {
-    cursor: number;
-    count: number;
-    remaining: number;
-    results: BubbleRecord[];
-  };
-}
-
 export function createSearchAllTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_search_all',
     mode: 'read-only',
-    description: 'Auto-paginates through all records of a Bubble data type, up to a configurable max. Returns combined results with a capped flag if the limit was hit.',
+    description:
+      'Auto-paginates through all records of a Bubble data type, up to a configurable max. Returns combined results with a capped flag if the limit was hit.',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     inputSchema: {
-      dataType: { type: 'string', description: 'The Bubble data type to search' },
-      constraints: { type: 'array', description: 'Optional search constraints' },
-      sort_field: { type: 'string', description: 'Field to sort by' },
-      descending: { type: 'boolean', description: 'Sort descending when true' },
-      max_records: { type: 'number', description: `Max records to return (default ${DEFAULT_MAX_RECORDS}, max ${HARD_MAX_RECORDS})` },
+      dataType: z.string().min(1).describe('The Bubble data type to search'),
+      constraints: z.array(z.record(z.unknown())).optional().describe('Optional search constraints'),
+      sort_field: z.string().optional().describe('Field to sort by'),
+      descending: z.boolean().optional().describe('Sort descending when true'),
+      max_records: z.number().int().min(1).max(10000).optional().default(1000).describe(`Max records to return (default 1000, max 10000)`),
     },
     async handler(args) {
       try {
-        const dataType = args.dataType as string;
+        const dataType = validateIdentifier(args.dataType as string, 'dataType');
         const maxRecords = Math.min(
           (args.max_records as number | undefined) ?? DEFAULT_MAX_RECORDS,
-          HARD_MAX_RECORDS
+          HARD_MAX_RECORDS,
         );
 
         const baseParams = new URLSearchParams();
@@ -43,7 +44,7 @@ export function createSearchAllTool(client: BubbleClient): ToolDefinition {
           baseParams.set('constraints', JSON.stringify(args.constraints));
         }
         if (args.sort_field) {
-          baseParams.set('sort_field', args.sort_field as string);
+          baseParams.set('sort_field', validateIdentifier(args.sort_field as string, 'sort_field'));
         }
         if (args.descending !== undefined) {
           baseParams.set('descending', String(args.descending));
@@ -57,7 +58,9 @@ export function createSearchAllTool(client: BubbleClient): ToolDefinition {
           const params = new URLSearchParams(baseParams);
           params.set('cursor', String(cursor));
 
-          const response = await client.get<SearchResponse>(`/obj/${dataType}?${params.toString()}`);
+          const response = await client.get<SearchResponse>(
+            `/obj/${dataType}?${params.toString()}`,
+          );
           const page = response.response;
           const pageResults = page.results ?? [];
 

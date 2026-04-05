@@ -19,7 +19,14 @@ export function createSchemaSummaryTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_schema_summary',
     mode: 'read-only',
-    description: 'Fetches the Bubble.io schema and returns a human-readable summary: types, field counts, and detected relationships between data types.',
+    description:
+      'Fetches the Bubble.io schema and returns a human-readable summary: types, field counts, and detected relationships between data types.',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     inputSchema: {},
     async handler(_args) {
       try {

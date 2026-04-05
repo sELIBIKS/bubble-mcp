@@ -3,6 +3,8 @@ import type { BubbleClient } from '../../bubble-client.js';
 import type { ToolDefinition, SeedTracker } from '../../types.js';
 import type { BubbleSchemaResponse } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
+import { topologicalSortTypes } from '../../shared/graph.js';
+import { validateIdentifier } from '../../shared/validation.js';
 
 interface CreateResponse {
   id?: string;
@@ -11,7 +13,7 @@ interface CreateResponse {
 
 function resolveRefs(
   record: Record<string, unknown>,
-  tracker: SeedTracker
+  tracker: SeedTracker,
 ): Record<string, unknown> {
   const resolved: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(record)) {
@@ -29,37 +31,16 @@ function resolveRefs(
   return resolved;
 }
 
-function topologicalSortTypes(
-  types: string[],
-  schema: Record<string, Record<string, { type: string }>>
-): string[] {
-  const visited = new Set<string>();
-  const sorted: string[] = [];
-
-  function visit(name: string) {
-    if (visited.has(name)) return;
-    visited.add(name);
-    const fields = schema[name] ?? {};
-    for (const fieldDef of Object.values(fields)) {
-      if (fieldDef.type?.startsWith('custom.')) {
-        const dep = fieldDef.type.slice('custom.'.length);
-        if (types.includes(dep)) visit(dep);
-      }
-    }
-    sorted.push(name);
-  }
-
-  for (const t of types) visit(t);
-  return sorted;
-}
-
-export function createSeedDataTool(
-  client: BubbleClient,
-  seedTracker: SeedTracker
-): ToolDefinition {
+export function createSeedDataTool(client: BubbleClient, seedTracker: SeedTracker): ToolDefinition {
   return {
     name: 'bubble_seed_data',
     mode: 'admin',
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    },
     description:
       'Creates test seed data in Bubble.io in dependency order. Supports __ref:type:index to reference previously seeded record IDs.',
     inputSchema: {
@@ -78,7 +59,11 @@ export function createSeedDataTool(
         const liveTypes = schema.get ?? {};
 
         const typeNames = Object.keys(seedDefinition);
-        const ordered = topologicalSortTypes(typeNames, liveTypes as Record<string, Record<string, { type: string }>>);
+        for (const name of typeNames) validateIdentifier(name, 'dataType');
+        const ordered = topologicalSortTypes(
+          typeNames,
+          liveTypes as Record<string, Record<string, { type: string }>>,
+        );
 
         const created: Record<string, { count: number; ids: string[] }> = {};
 
@@ -89,10 +74,7 @@ export function createSeedDataTool(
           const ids: string[] = [];
           for (const record of records) {
             const resolved = resolveRefs(record, seedTracker);
-            const response = await client.post<CreateResponse>(
-              `/obj/${typeName}`,
-              resolved
-            );
+            const response = await client.post<CreateResponse>(`/obj/${typeName}`, resolved);
             const id = response.id ?? response.body?.id ?? '';
             if (id) ids.push(id);
           }

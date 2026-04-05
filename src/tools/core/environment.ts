@@ -6,7 +6,14 @@ export function createEnvironmentTool(config: BubbleConfig): ToolDefinition {
   return {
     name: 'bubble_get_environment',
     mode: 'read-only',
-    description: 'Return the current server environment configuration: app URL, environment, mode, and rate limit. The API token is never exposed.',
+    description:
+      'Return the current server environment configuration: app URL, environment, mode, and rate limit. The API token is never exposed.',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     inputSchema: {},
     async handler(_args) {
       return successResult({

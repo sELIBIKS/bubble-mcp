@@ -45,9 +45,15 @@ export function createServer(config: BubbleConfig): {
   const rateLimiter = new RateLimiter(config.rateLimit);
   const seedTracker: SeedTracker = {
     seededIds: new Map(),
-    set(dataType, ids) { this.seededIds.set(dataType, ids); },
-    get(dataType) { return this.seededIds.get(dataType) ?? []; },
-    clear() { this.seededIds.clear(); },
+    set(dataType, ids) {
+      this.seededIds.set(dataType, ids);
+    },
+    get(dataType) {
+      return this.seededIds.get(dataType) ?? [];
+    },
+    clear() {
+      this.seededIds.clear();
+    },
   };
 
   // Collect all tool definitions (empty arrays for now, filled in later tasks)
@@ -66,6 +72,7 @@ export function createServer(config: BubbleConfig): {
       tool.name,
       {
         description: tool.description,
+        annotations: tool.annotations,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         inputSchema: tool.inputSchema as any,
       },
@@ -73,13 +80,18 @@ export function createServer(config: BubbleConfig): {
       (async (args: Record<string, unknown>) => {
         if (!rateLimiter.tryAcquire()) {
           return {
-            content: [{
-              type: 'text' as const,
-              text: JSON.stringify({
-                success: false,
-                error: { code: 429, message: `Rate limit exceeded (${config.rateLimit} req/min). Try again shortly.` },
-              }),
-            }],
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify({
+                  success: false,
+                  error: {
+                    code: 429,
+                    message: `Rate limit exceeded (${config.rateLimit} req/min). Try again shortly.`,
+                  },
+                }),
+              },
+            ],
             isError: true,
           };
         }
@@ -89,7 +101,7 @@ export function createServer(config: BubbleConfig): {
         } catch (error) {
           return handleToolError(error);
         }
-      }) as any
+      }) as any,
     );
   }
 
@@ -126,7 +138,11 @@ function getCompoundTools(client: BubbleClient, config: BubbleConfig): ToolDefin
   ];
 }
 
-function getDeveloperTools(client: BubbleClient, _config: BubbleConfig, seedTracker: SeedTracker): ToolDefinition[] {
+function getDeveloperTools(
+  client: BubbleClient,
+  _config: BubbleConfig,
+  seedTracker: SeedTracker,
+): ToolDefinition[] {
   return [
     createHealthCheckTool(client),
     createExportSchemaTool(client),

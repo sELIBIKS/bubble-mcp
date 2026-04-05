@@ -16,6 +16,12 @@ export function createWorkflowMapTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_workflow_map',
     mode: 'read-only',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Lists all API workflows defined in the Bubble.io app schema. Returns workflow names and parameters.',
     inputSchema: {},
@@ -27,7 +33,8 @@ export function createWorkflowMapTool(client: BubbleClient): ToolDefinition {
           return successResult({
             workflows: [],
             total: 0,
-            message: 'No API workflows found in schema. Ensure API workflows are enabled for your app.',
+            message:
+              'No API workflows found in schema. Ensure API workflows are enabled for your app.',
           });
         }
 

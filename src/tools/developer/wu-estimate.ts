@@ -2,13 +2,8 @@ import { z } from 'zod';
 import type { BubbleClient } from '../../bubble-client.js';
 import type { ToolDefinition } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
-
-interface CountResponse {
-  response?: {
-    count?: number;
-    remaining?: number;
-  };
-}
+import type { CountResponse } from '../../shared/types.js';
+import { validateIdentifier } from '../../shared/validation.js';
 
 const BASE_WU: Record<string, number> = {
   search: 0.3,
@@ -28,10 +23,16 @@ export function createWuEstimateTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_wu_estimate',
     mode: 'read-only',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Estimates Workload Units (WU) for a Bubble.io operation. Scales search estimates by dataset size and flags expensive patterns.',
     inputSchema: {
-      dataType: z.string().describe('The Bubble data type'),
+      dataType: z.string().min(1).describe('The Bubble data type'),
       operation: z
         .enum(['search', 'create', 'update', 'delete'])
         .describe('The operation to estimate'),
@@ -42,7 +43,7 @@ export function createWuEstimateTool(client: BubbleClient): ToolDefinition {
     },
     async handler(args) {
       try {
-        const dataType = args.dataType as string;
+        const dataType = validateIdentifier(args.dataType as string, 'dataType');
         const operation = args.operation as 'search' | 'create' | 'update' | 'delete';
         const constraints = (args.constraints as Record<string, unknown>[] | undefined) ?? [];
 
@@ -52,26 +53,32 @@ export function createWuEstimateTool(client: BubbleClient): ToolDefinition {
 
         if (operation === 'search') {
           try {
-            const countResponse = await client.get<CountResponse>(
-              `/obj/${dataType}?limit=0`
-            );
-            const count = (countResponse.response?.count ?? 0) + (countResponse.response?.remaining ?? 0);
+            const countResponse = await client.get<CountResponse>(`/obj/${dataType}?limit=0`);
+            const count =
+              (countResponse.response?.count ?? 0) + (countResponse.response?.remaining ?? 0);
             estimatedRecords = count;
 
             if (count > 50_000) {
               estimatedWu *= 3;
-              suggestions.push('Dataset is very large (>50k records). Consider using constraints to narrow results.');
+              suggestions.push(
+                'Dataset is very large (>50k records). Consider using constraints to narrow results.',
+              );
             } else if (count > 10_000) {
               estimatedWu *= 2;
-              suggestions.push('Dataset is large (>10k records). Ensure you use indexed fields in constraints.');
+              suggestions.push(
+                'Dataset is large (>10k records). Ensure you use indexed fields in constraints.',
+              );
             }
 
             // Check for text-contains on large datasets
             const hasTextContains = constraints.some(
-              c => typeof c.constraint_type === 'string' && c.constraint_type.includes('contains')
+              (c) =>
+                typeof c.constraint_type === 'string' && c.constraint_type.includes('contains'),
             );
             if (hasTextContains && count > 1000) {
-              suggestions.push('Text "contains" constraint on large dataset is expensive. Consider a dedicated search index.');
+              suggestions.push(
+                'Text "contains" constraint on large dataset is expensive. Consider a dedicated search index.',
+              );
               estimatedWu *= 1.5;
             }
           } catch {

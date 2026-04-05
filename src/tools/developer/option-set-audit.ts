@@ -2,11 +2,11 @@ import type { BubbleClient } from '../../bubble-client.js';
 import type { ToolDefinition } from '../../types.js';
 import type { BubbleSchemaResponse, BubbleRecord } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
+import { EXCLUDED_FIELDS } from '../../shared/constants.js';
 
 const UNIQUE_RATIO_THRESHOLD = 0.3;
 const MAX_UNIQUE_VALUES = 20;
 const SAMPLE_SIZE = 100;
-const EXCLUDED_FIELDS = new Set(['_id', 'Created Date', 'Modified Date', 'Created By']);
 
 interface OptionSetCandidate {
   dataType: string;
@@ -27,6 +27,12 @@ export function createOptionSetAuditTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_option_set_audit',
     mode: 'read-only',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Scans text fields across all data types and identifies fields that should be converted to Bubble option sets based on low cardinality.',
     inputSchema: {},
@@ -46,10 +52,11 @@ export function createOptionSetAuditTool(client: BubbleClient): ToolDefinition {
           let records: BubbleRecord[] = [];
           try {
             const response = await client.get<SearchResponse>(
-              `/obj/${typeName}?limit=${SAMPLE_SIZE}&cursor=0`
+              `/obj/${typeName}?limit=${SAMPLE_SIZE}&cursor=0`,
             );
             records = response.response?.results ?? [];
-          } catch {
+          } catch (err) {
+            // Cannot fetch records for this type, skip
             continue;
           }
 
@@ -57,8 +64,8 @@ export function createOptionSetAuditTool(client: BubbleClient): ToolDefinition {
 
           for (const fieldName of textFields) {
             const values = records
-              .map(r => r[fieldName])
-              .filter(v => v !== null && v !== undefined && v !== '') as string[];
+              .map((r) => r[fieldName])
+              .filter((v) => v !== null && v !== undefined && v !== '') as string[];
 
             if (values.length === 0) continue;
 

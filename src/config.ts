@@ -15,7 +15,8 @@ interface ConfigFile {
 export function loadConfig(): BubbleConfig {
   const configPath = process.env.BUBBLE_CONFIG_PATH;
   if (configPath && existsSync(configPath)) return loadFromFile(configPath);
-  if (!configPath && existsSync('./bubble.config.json')) return loadFromFile('./bubble.config.json');
+  if (!configPath && existsSync('./bubble.config.json'))
+    return loadFromFile('./bubble.config.json');
   return loadFromEnv();
 }
 
@@ -30,7 +31,7 @@ function loadFromEnv(): BubbleConfig {
     process.env.BUBBLE_API_TOKEN,
     process.env.BUBBLE_MODE,
     process.env.BUBBLE_ENVIRONMENT,
-    process.env.BUBBLE_RATE_LIMIT ? Number(process.env.BUBBLE_RATE_LIMIT) : undefined
+    process.env.BUBBLE_RATE_LIMIT ? Number(process.env.BUBBLE_RATE_LIMIT) : undefined,
   );
 }
 
@@ -39,19 +40,23 @@ function buildConfig(
   apiToken?: string,
   mode?: string,
   environment?: string,
-  rateLimit?: number
+  rateLimit?: number,
 ): BubbleConfig {
   if (!appUrl) throw new Error('BUBBLE_APP_URL is required');
   if (!apiToken) throw new Error('BUBBLE_API_TOKEN is required');
 
   const resolvedMode = mode || 'read-only';
   if (!VALID_MODES.includes(resolvedMode as ServerMode)) {
-    throw new Error(`BUBBLE_MODE must be one of: ${VALID_MODES.join(', ')}. Got: "${resolvedMode}"`);
+    throw new Error(
+      `BUBBLE_MODE must be one of: ${VALID_MODES.join(', ')}. Got: "${resolvedMode}"`,
+    );
   }
 
   const resolvedEnv = environment || 'development';
   if (!VALID_ENVIRONMENTS.includes(resolvedEnv as Environment)) {
-    throw new Error(`BUBBLE_ENVIRONMENT must be one of: ${VALID_ENVIRONMENTS.join(', ')}. Got: "${resolvedEnv}"`);
+    throw new Error(
+      `BUBBLE_ENVIRONMENT must be one of: ${VALID_ENVIRONMENTS.join(', ')}. Got: "${resolvedEnv}"`,
+    );
   }
 
   return {

@@ -4,19 +4,26 @@ import type { ToolDefinition } from '../../types.js';
 import type { BubbleSchemaResponse } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
 import { parseTdd } from './tdd-parser.js';
+import { validateFilePath } from '../../shared/validation.js';
 
 export function createTddValidateTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_tdd_validate',
     mode: 'read-only',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
     description:
       'Validates a TDD markdown file against the live Bubble.io schema. Reports missing types, missing fields, type mismatches, and extra fields.',
     inputSchema: {
-      tdd_path: z.string().describe('Absolute path to the TDD markdown file'),
+      tdd_path: z.string().min(1).describe('Path to the TDD markdown file'),
     },
     async handler(args) {
       try {
-        const tddPath = args.tdd_path as string;
+        const tddPath = validateFilePath(args.tdd_path as string);
         const tddTypes = parseTdd(tddPath);
 
         const schema = await client.get<BubbleSchemaResponse>('/meta');
@@ -24,7 +31,12 @@ export function createTddValidateTool(client: BubbleClient): ToolDefinition {
 
         const missingTypes: string[] = [];
         const missingFields: Array<{ type: string; field: string }> = [];
-        const typeMismatches: Array<{ type: string; field: string; expected: string; actual: string }> = [];
+        const typeMismatches: Array<{
+          type: string;
+          field: string;
+          expected: string;
+          actual: string;
+        }> = [];
         const extraFields: Array<{ type: string; field: string }> = [];
 
         for (const tddType of tddTypes) {
@@ -52,7 +64,7 @@ export function createTddValidateTool(client: BubbleClient): ToolDefinition {
           }
 
           // Detect extra fields in live that are not in TDD
-          const tddFieldNames = new Set(tddType.fields.map(f => f.name));
+          const tddFieldNames = new Set(tddType.fields.map((f) => f.name));
           for (const liveFieldName of Object.keys(liveFields)) {
             if (!tddFieldNames.has(liveFieldName)) {
               extraFields.push({ type: tddType.name, field: liveFieldName });

@@ -1,7 +1,10 @@
+import { z } from 'zod';
 import type { BubbleClient } from '../../bubble-client.js';
 import type { ToolDefinition } from '../../types.js';
-import type { BubbleSchemaResponse, BubbleRecord } from '../../types.js';
+import type { BubbleSchemaResponse } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
+import type { SearchResponse } from '../../shared/types.js';
+import { validateIdentifier } from '../../shared/validation.js';
 
 interface OrphanRecord {
   record_id: string;
@@ -10,35 +13,35 @@ interface OrphanRecord {
   referenced_type: string;
 }
 
-interface SearchResponse {
-  response: {
-    cursor: number;
-    count: number;
-    remaining: number;
-    results: BubbleRecord[];
-  };
-}
-
 export function createFindOrphansTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_find_orphans',
     mode: 'read-only',
-    description: 'Scans records for broken references (orphaned foreign keys). Samples records and checks that each reference field points to an existing record.',
+    description:
+      'Scans records for broken references (orphaned foreign keys). Samples records and checks that each reference field points to an existing record.',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     inputSchema: {
-      dataType: { type: 'string', description: 'Optional: restrict scan to a single data type' },
-      sample_size: { type: 'number', description: 'Number of records to sample per type (default 200)' },
+      dataType: z.string().min(1).optional().describe('Optional: restrict scan to a single data type'),
+      sample_size: z.number().int().min(1).max(1000).optional().default(200).describe('Number of records to sample per type (default 200)'),
     },
     async handler(args) {
       try {
         const schema = await client.get<BubbleSchemaResponse>('/meta');
         const getTypes = schema.get ?? {};
         const sampleSize = (args.sample_size as number | undefined) ?? 200;
-        const filterType = args.dataType as string | undefined;
+        const filterType = args.dataType ? validateIdentifier(args.dataType as string, 'dataType') : undefined;
         const orphans: OrphanRecord[] = [];
         let scannedTypes = 0;
 
         const typesToScan = filterType
-          ? (filterType in getTypes ? [filterType] : [])
+          ? filterType in getTypes
+            ? [filterType]
+            : []
           : Object.keys(getTypes);
 
         for (const typeName of typesToScan) {
@@ -56,7 +59,7 @@ export function createFindOrphansTool(client: BubbleClient): ToolDefinition {
 
           scannedTypes++;
           const response = await client.get<SearchResponse>(
-            `/obj/${typeName}?limit=${sampleSize}&cursor=0`
+            `/obj/${typeName}?limit=${sampleSize}&cursor=0`,
           );
           const records = response.response?.results ?? [];
 

@@ -2,9 +2,7 @@ import type { BubbleClient } from '../../bubble-client.js';
 import type { ToolDefinition } from '../../types.js';
 import type { BubbleSchemaResponse } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
-
-const SENSITIVE_PATTERNS = ['password', 'token', 'secret', 'api_key', 'ssn', 'credit_card', 'cvv', 'pin'];
-const PII_PATTERNS = ['email', 'phone', 'address', 'dob'];
+import { SENSITIVE_PATTERNS, PII_PATTERNS, matchesAny } from '../../shared/constants.js';
 
 interface AuditIssue {
   severity: 'critical' | 'warning' | 'info';
@@ -14,16 +12,18 @@ interface AuditIssue {
   message: string;
 }
 
-function matchesAny(fieldName: string, patterns: string[]): boolean {
-  const lower = fieldName.toLowerCase();
-  return patterns.some(p => lower.includes(p));
-}
-
 export function createPrivacyAuditTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_privacy_audit',
     mode: 'read-only',
-    description: 'Audits the Bubble.io schema for privacy risks: sensitive fields, PII exposure, and API write access. Returns a score (0–100) and a list of issues.',
+    description:
+      'Audits the Bubble.io schema for privacy risks: sensitive fields, PII exposure, and API write access. Returns a score (0–100) and a list of issues.',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     inputSchema: {},
     async handler(_args) {
       try {
@@ -66,9 +66,9 @@ export function createPrivacyAuditTool(client: BubbleClient): ToolDefinition {
           });
         }
 
-        const criticalCount = issues.filter(i => i.severity === 'critical').length;
-        const warningCount = issues.filter(i => i.severity === 'warning').length;
-        const infoCount = issues.filter(i => i.severity === 'info').length;
+        const criticalCount = issues.filter((i) => i.severity === 'critical').length;
+        const warningCount = issues.filter((i) => i.severity === 'warning').length;
+        const infoCount = issues.filter((i) => i.severity === 'info').length;
         const score = Math.max(0, 100 - criticalCount * 15 - warningCount * 5);
 
         return successResult({

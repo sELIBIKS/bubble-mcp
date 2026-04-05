@@ -59,10 +59,18 @@ export interface Constraint {
   value?: unknown;
 }
 
+export interface ToolAnnotations {
+  readOnlyHint?: boolean;
+  destructiveHint?: boolean;
+  idempotentHint?: boolean;
+  openWorldHint?: boolean;
+}
+
 export interface ToolDefinition {
   name: string;
   mode: ToolMode;
   description: string;
+  annotations: ToolAnnotations;
   inputSchema: Record<string, unknown>;
   handler: (args: Record<string, unknown>) => Promise<ToolResult>;
 }

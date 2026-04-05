@@ -21,12 +21,19 @@ const defaultFactory: ClientFactory = (config) => new BubbleClient(config);
 
 export function createCompareEnvironmentsTool(
   config: BubbleConfig,
-  clientFactory: ClientFactory = defaultFactory
+  clientFactory: ClientFactory = defaultFactory,
 ): ToolDefinition {
   return {
     name: 'bubble_compare_environments',
     mode: 'read-only',
-    description: 'Compares the schema between development and live Bubble environments. Detects new types, removed types, new/removed fields, and changed field types.',
+    description:
+      'Compares the schema between development and live Bubble environments. Detects new types, removed types, new/removed fields, and changed field types.',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     inputSchema: {},
     async handler(_args) {
       try {
@@ -47,8 +54,8 @@ export function createCompareEnvironmentsTool(
         const devTypeNames = new Set(Object.keys(devTypes));
         const liveTypeNames = new Set(Object.keys(liveTypes));
 
-        const newTypesInDev = [...devTypeNames].filter(t => !liveTypeNames.has(t));
-        const removedInDev = [...liveTypeNames].filter(t => !devTypeNames.has(t));
+        const newTypesInDev = [...devTypeNames].filter((t) => !liveTypeNames.has(t));
+        const removedInDev = [...liveTypeNames].filter((t) => !devTypeNames.has(t));
 
         const newFields: FieldDiff[] = [];
         const removedFields: FieldDiff[] = [];

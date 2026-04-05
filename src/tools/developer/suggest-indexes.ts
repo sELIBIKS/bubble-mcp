@@ -2,6 +2,7 @@ import type { BubbleClient } from '../../bubble-client.js';
 import type { ToolDefinition } from '../../types.js';
 import type { BubbleSchemaResponse } from '../../types.js';
 import { successResult, handleToolError } from '../../middleware/error-handler.js';
+import type { CountResponse } from '../../shared/types.js';
 
 const CATEGORICAL_PATTERNS = ['status', 'state', 'type', 'category', 'role', 'level'];
 const FK_MIN_RECORDS = 500;
@@ -15,13 +16,6 @@ interface IndexSuggestion {
   priority: 'high' | 'medium' | 'low';
 }
 
-interface CountResponse {
-  response?: {
-    count?: number;
-    remaining?: number;
-  };
-}
-
 function priorityOrder(p: string): number {
   if (p === 'high') return 0;
   if (p === 'medium') return 1;
@@ -32,6 +26,12 @@ export function createSuggestIndexesTool(client: BubbleClient): ToolDefinition {
   return {
     name: 'bubble_suggest_indexes',
     mode: 'read-only',
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
     description:
       'Analyses the Bubble.io schema and record counts to suggest fields that would benefit from database indexes.',
     inputSchema: {},
@@ -44,13 +44,11 @@ export function createSuggestIndexesTool(client: BubbleClient): ToolDefinition {
         for (const [typeName, fields] of Object.entries(getTypes)) {
           let recordCount = 0;
           try {
-            const countResponse = await client.get<CountResponse>(
-              `/obj/${typeName}?limit=0`
-            );
+            const countResponse = await client.get<CountResponse>(`/obj/${typeName}?limit=0`);
             recordCount =
-              (countResponse.response?.count ?? 0) +
-              (countResponse.response?.remaining ?? 0);
-          } catch {
+              (countResponse.response?.count ?? 0) + (countResponse.response?.remaining ?? 0);
+          } catch (err) {
+            // Cannot probe record count for this type, skip
             continue;
           }
 
@@ -86,7 +84,7 @@ export function createSuggestIndexesTool(client: BubbleClient): ToolDefinition {
             // Categorical text fields
             if (
               fieldType === 'text' &&
-              CATEGORICAL_PATTERNS.some(p => lower.includes(p)) &&
+              CATEGORICAL_PATTERNS.some((p) => lower.includes(p)) &&
               recordCount >= CATEGORICAL_MIN_RECORDS
             ) {
               suggestions.push({

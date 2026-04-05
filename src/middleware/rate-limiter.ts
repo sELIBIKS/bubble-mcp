@@ -12,7 +12,10 @@ export class RateLimiter {
 
   tryAcquire(): boolean {
     this.refill();
-    if (this.tokens > 0) { this.tokens--; return true; }
+    if (this.tokens > 0) {
+      this.tokens--;
+      return true;
+    }
     return false;
   }
 

@@ -1,7 +1,11 @@
 import type { BubbleConfig } from './types.js';
 
 export class BubbleApiError extends Error {
-  constructor(public code: number, message: string, public bubbleStatus?: string) {
+  constructor(
+    public code: number,
+    message: string,
+    public bubbleStatus?: string,
+  ) {
     super(message);
     this.name = 'BubbleApiError';
   }
@@ -17,7 +21,9 @@ export class BubbleClient {
     this.token = config.apiToken;
   }
 
-  async get<T = unknown>(path: string): Promise<T> { return this.request<T>('GET', path); }
+  async get<T = unknown>(path: string): Promise<T> {
+    return this.request<T>('GET', path);
+  }
 
   async post<T = unknown>(path: string, body: unknown): Promise<T> {
     return this.request<T>('POST', path, {
@@ -40,23 +46,29 @@ export class BubbleClient {
     });
   }
 
-  async delete(path: string): Promise<void> { await this.request('DELETE', path); }
+  async delete(path: string): Promise<void> {
+    await this.request('DELETE', path);
+  }
 
   async postBulk(path: string, records: unknown[]): Promise<string> {
-    const body = records.map(r => JSON.stringify(r)).join('\n');
+    const body = records.map((r) => JSON.stringify(r)).join('\n');
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${this.token}`, 'Content-Type': 'text/plain' },
+      headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'text/plain' },
       body,
     });
     if (!response.ok) await this.handleError(response);
     return response.text();
   }
 
-  private async request<T>(method: string, path: string, options?: { headers?: Record<string, string>; body?: string }): Promise<T> {
+  private async request<T>(
+    method: string,
+    path: string,
+    options?: { headers?: Record<string, string>; body?: string },
+  ): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method,
-      headers: { 'Authorization': `Bearer ${this.token}`, ...options?.headers },
+      headers: { Authorization: `Bearer ${this.token}`, ...options?.headers },
       body: options?.body,
     });
     if (!response.ok) await this.handleError(response);
@@ -68,10 +80,12 @@ export class BubbleClient {
     let message = `Bubble API error (${response.status})`;
     let bubbleStatus: string | undefined;
     try {
-      const body = await response.json() as { body?: { status?: string; message?: string } };
+      const body = (await response.json()) as { body?: { status?: string; message?: string } };
       if (body?.body?.message) message = body.body.message;
       bubbleStatus = body?.body?.status;
-    } catch { /* not JSON */ }
+    } catch {
+      /* not JSON */
+    }
     throw new BubbleApiError(response.status, message, bubbleStatus);
   }
 }
