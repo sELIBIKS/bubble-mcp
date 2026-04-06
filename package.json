@@ -5,12 +5,14 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "bubble-mcp": "dist/index.js"
+    "bubble-mcp": "dist/index.js",
+    "bubble-mcp-auth": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
+    "auth": "tsx src/cli.ts auth",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src/",
@@ -32,6 +34,9 @@
     "tsx": "^4.0.0",
     "typescript": "^6.0.2",
     "vitest": "^3.0.0"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.52.0"
   },
   "engines": {
     "node": ">=20.0.0"
