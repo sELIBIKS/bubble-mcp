@@ -6,6 +6,7 @@ import { handleToolError } from './middleware/error-handler.js';
 import { loadEditorConfig } from './config.js';
 import { EditorClient } from './auth/editor-client.js';
 import { createEditorStatusTool } from './tools/core/editor-status.js';
+import { createAppStructureTool } from './tools/core/app-structure.js';
 import type { BubbleConfig, ToolDefinition, SeedTracker } from './types.js';
 import { createSchemaTool } from './tools/core/schema.js';
 import { createSearchTool } from './tools/core/search.js';
@@ -176,5 +177,6 @@ function getDeveloperTools(
 function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
   return [
     createEditorStatusTool(editorClient),
+    createAppStructureTool(editorClient),
   ];
 }
