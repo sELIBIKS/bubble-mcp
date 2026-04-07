@@ -14,7 +14,7 @@ interface PlaywrightCookie {
 
 export function extractBubbleCookies(cookies: PlaywrightCookie[]): StoredCookie[] {
   return cookies
-    .filter((c) => c.domain === '.bubble.io' || c.domain === 'bubble.io')
+    .filter((c) => c.domain.endsWith('bubble.io'))
     .map((c) => ({ name: c.name, value: c.value, domain: c.domain }));
 }
 
@@ -23,21 +23,29 @@ export function validateSession(cookies: StoredCookie[]): boolean {
   return names.has('meta_u1main') && names.has('meta_live_u2main');
 }
 
-const LOGIN_URL = 'https://bubble.io/log-in';
+const LOGIN_URL = 'https://bubble.io/login?mode=login';
 
 async function loadPlaywright() {
   const moduleName = 'playwright';
   try {
     const pw = await import(/* webpackIgnore: true */ moduleName);
+    // Verify the browser binary exists by checking executablePath
+    pw.chromium.executablePath();
     return pw.chromium;
   } catch {
-    // Not installed — auto-install it
+    // Package missing or browser binary not installed
   }
 
-  console.log('Installing Playwright (first-time setup)...');
+  console.log('Setting up Playwright (first-time setup)...');
   try {
-    execFileSync('npm', ['install', 'playwright'], { stdio: 'inherit' });
-    console.log('Installing Chromium browser...');
+    // Install the npm package if missing
+    try {
+      await import(/* webpackIgnore: true */ moduleName);
+    } catch {
+      execFileSync('npm', ['install', 'playwright'], { stdio: 'inherit' });
+    }
+    // Always ensure browser binary is installed
+    console.log('Downloading Chromium browser...');
     execFileSync('npx', ['playwright', 'install', 'chromium'], { stdio: 'inherit' });
     const pw = await import(/* webpackIgnore: true */ moduleName);
     return pw.chromium;
@@ -52,7 +60,7 @@ export async function browserLogin(appId: string): Promise<void> {
   const chromium = await loadPlaywright();
 
   console.log(`Opening browser for Bubble login...`);
-  console.log(`After logging in, navigate to the editor for app "${appId}" if not redirected.`);
+  console.log(`Log in with your Bubble account. The editor will open automatically after login.`);
 
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
@@ -71,14 +79,26 @@ export async function browserLogin(appId: string): Promise<void> {
     await page.waitForTimeout(pollIntervalMs);
     elapsed += pollIntervalMs;
 
-    const allCookies = await context.cookies('https://bubble.io');
-    const bubbleCookies = extractBubbleCookies(allCookies as PlaywrightCookie[]);
+    // Wait until we land on the projects page — the definitive post-login redirect
+    const currentUrl = page.url();
+    if (!currentUrl.includes('bubble.io/home')) continue;
 
-    if (validateSession(bubbleCookies)) {
+    // User has navigated away from login — they're authenticated
+    // Now go to the editor to capture app-specific session state
+    const editorUrl = `https://bubble.io/page?id=${appId}&tab=Design&name=index`;
+    console.log(`\nLogin successful! Opening editor for "${appId}"...`);
+    await page.goto(editorUrl, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(5000); // Let editor fully initialize
+
+    // Capture cookies after visiting editor
+    const allCookies = await context.cookies('https://bubble.io');
+    const finalCookies = extractBubbleCookies(allCookies as PlaywrightCookie[]);
+
+    if (validateSession(finalCookies)) {
       authenticated = true;
       const mgr = createSessionManager();
-      mgr.save(appId, bubbleCookies);
-      console.log(`\nAuthenticated! ${bubbleCookies.length} cookies saved for app "${appId}".`);
+      mgr.save(appId, finalCookies);
+      console.log(`Authenticated! ${finalCookies.length} cookies saved for app "${appId}".`);
       break;
     }
   }
