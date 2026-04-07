@@ -27,7 +27,8 @@ const LOGIN_URL = 'https://bubble.io/log-in';
 export async function browserLogin(appId: string): Promise<void> {
   let chromium;
   try {
-    const pw = await import('playwright');
+    const moduleName = 'playwright';
+    const pw = await import(/* webpackIgnore: true */ moduleName);
     chromium = pw.chromium;
   } catch {
     console.error('Playwright is required for browser auth.');
