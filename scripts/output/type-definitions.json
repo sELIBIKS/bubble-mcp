@@ -1,0 +1,520 @@
+{
+  "wallet": {
+    "%d": "Wallet",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "user_ifo": {
+    "%d": "User ifo",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "region": {
+    "%d": "Region",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "userprofile": {
+    "%d": "UserProfile",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "wallet1": {
+    "%d": "Wallet",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "wallettransaction": {
+    "%d": "WalletTransaction",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "giveaway": {
+    "%d": "Giveaway",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "item": {
+    "%d": "Item",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "entry": {
+    "%d": "Entry",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "drawlog": {
+    "%d": "DrawLog",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "partnerinvite": {
+    "%d": "PartnerInvite",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "referralreward": {
+    "%d": "ReferralReward",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "notification": {
+    "%d": "Notification",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "partnerprofile": {
+    "%d": "PartnerProfile",
+    "privacy_role": {
+      "everyone": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "visible_to_creator_": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

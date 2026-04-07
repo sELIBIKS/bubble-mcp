@@ -1,0 +1,479 @@
+{
+  "first20": [
+    {
+      "last_change_date": 1773176677042,
+      "last_change": 54592915902,
+      "path": [
+        "screenshot",
+        "last_update"
+      ],
+      "data": 1773176677040,
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176697996,
+      "last_change": 54592920605,
+      "path": [
+        "user_types",
+        "wallet"
+      ],
+      "data": {
+        "%d": "Wallet",
+        "privacy_role": {
+          "everyone": {
+            "%d": "everyone",
+            "permissions": {
+              "view_all": false,
+              "view_attachments": false,
+              "search_for": false,
+              "auto_binding": false
+            }
+          },
+          "visible_to_creator_": {
+            "%d": "Visible to creator",
+            "permissions": {
+              "view_all": true,
+              "view_attachments": true,
+              "search_for": true,
+              "auto_binding": false
+            },
+            "%c": {
+              "%x": "InjectedValue",
+              "%n": {
+                "%x": "Message",
+                "%nm": "Created By",
+                "%n": {
+                  "%x": "Message",
+                  "%nm": "equals",
+                  "%a": {
+                    "%x": "CurrentUser"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176697996,
+      "last_change": 54592920606,
+      "path": [
+        "user_types",
+        "wallet",
+        "privacy_role",
+        "everyone"
+      ],
+      "data": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176697996,
+      "last_change": 54592920607,
+      "path": [
+        "user_types",
+        "wallet",
+        "privacy_role",
+        "visible_to_creator_"
+      ],
+      "data": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176697996,
+      "last_change": 54592920608,
+      "path": [
+        "user_types",
+        "wallet",
+        "privacy_role",
+        "visible_to_creator_",
+        "%c"
+      ],
+      "data": {
+        "%x": "InjectedValue",
+        "%n": {
+          "%x": "Message",
+          "%nm": "Created By",
+          "%n": {
+            "%x": "Message",
+            "%nm": "equals",
+            "%a": {
+              "%x": "CurrentUser"
+            }
+          }
+        }
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176714832,
+      "last_change": 54592922781,
+      "path": [
+        "user_types",
+        "wallet",
+        "%f3",
+        "entry_count_number"
+      ],
+      "data": {
+        "%d": "entry_count",
+        "%v": "number"
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176877525,
+      "last_change": 54592943200,
+      "path": [
+        "user_types",
+        "user_ifo"
+      ],
+      "data": {
+        "%d": "User ifo",
+        "privacy_role": {
+          "everyone": {
+            "%d": "everyone",
+            "permissions": {
+              "view_all": false,
+              "view_attachments": false,
+              "search_for": false,
+              "auto_binding": false
+            }
+          },
+          "visible_to_creator_": {
+            "%d": "Visible to creator",
+            "permissions": {
+              "view_all": true,
+              "view_attachments": true,
+              "search_for": true,
+              "auto_binding": false
+            },
+            "%c": {
+              "%x": "InjectedValue",
+              "%n": {
+                "%x": "Message",
+                "%nm": "Created By",
+                "%n": {
+                  "%x": "Message",
+                  "%nm": "equals",
+                  "%a": {
+                    "%x": "CurrentUser"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176877525,
+      "last_change": 54592943201,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "privacy_role",
+        "everyone"
+      ],
+      "data": {
+        "%d": "everyone",
+        "permissions": {
+          "view_all": false,
+          "view_attachments": false,
+          "search_for": false,
+          "auto_binding": false
+        }
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176877525,
+      "last_change": 54592943202,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "privacy_role",
+        "visible_to_creator_"
+      ],
+      "data": {
+        "%d": "Visible to creator",
+        "permissions": {
+          "view_all": true,
+          "view_attachments": true,
+          "search_for": true,
+          "auto_binding": false
+        },
+        "%c": {
+          "%x": "InjectedValue",
+          "%n": {
+            "%x": "Message",
+            "%nm": "Created By",
+            "%n": {
+              "%x": "Message",
+              "%nm": "equals",
+              "%a": {
+                "%x": "CurrentUser"
+              }
+            }
+          }
+        }
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176877525,
+      "last_change": 54592943203,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "privacy_role",
+        "visible_to_creator_",
+        "%c"
+      ],
+      "data": {
+        "%x": "InjectedValue",
+        "%n": {
+          "%x": "Message",
+          "%nm": "Created By",
+          "%n": {
+            "%x": "Message",
+            "%nm": "equals",
+            "%a": {
+              "%x": "CurrentUser"
+            }
+          }
+        }
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176881085,
+      "last_change": 54592943653,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "%d"
+      ],
+      "data": "User info",
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176923120,
+      "last_change": 54592948588,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "%f3",
+        "first_name_text"
+      ],
+      "data": {
+        "%d": "first_name",
+        "%v": "text"
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176932417,
+      "last_change": 54592949549,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "%f3",
+        "last_name_text"
+      ],
+      "data": {
+        "%d": "last_name",
+        "%v": "text"
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176946071,
+      "last_change": 54592950883,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "%f3",
+        "date_of_birth_date"
+      ],
+      "data": {
+        "%d": "date_of_birth",
+        "%v": "date"
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773176957676,
+      "last_change": 54592953414,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "%f3",
+        "phone_text"
+      ],
+      "data": {
+        "%d": "phone",
+        "%v": "text"
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773177617112,
+      "last_change": 54593050577,
+      "path": [
+        "settings",
+        "client_safe",
+        "plugins",
+        "1553006094610x835866904531566600"
+      ],
+      "data": "1.38.0",
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773177631777,
+      "last_change": 54593052667,
+      "path": [
+        "settings",
+        "client_safe",
+        "plugins",
+        "1670930264864x445277063097352200"
+      ],
+      "data": "1.8.2",
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773177881083,
+      "last_change": 54593086807,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "%f3",
+        "address_street_text"
+      ],
+      "data": {
+        "%d": "address_street",
+        "%v": "text"
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773177896782,
+      "last_change": 54593089988,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "%f3",
+        "address_line_2_text"
+      ],
+      "data": {
+        "%d": "address_line_2",
+        "%v": "text"
+      },
+      "action": "write"
+    },
+    {
+      "last_change_date": 1773177901644,
+      "last_change": 54593090499,
+      "path": [
+        "user_types",
+        "user_ifo",
+        "%f3",
+        "address_street_text",
+        "%d"
+      ],
+      "data": "address_line_1",
+      "action": "write"
+    }
+  ],
+  "last5": [
+    {
+      "last_change_date": 1775440454728,
+      "last_change": 56632386709,
+      "path": [
+        "_index",
+        "issues_list",
+        "bTGOi"
+      ],
+      "data": null,
+      "action": "write"
+    },
+    {
+      "last_change_date": 1775440454728,
+      "last_change": 56632386710,
+      "path": [
+        "_index",
+        "issues_list",
+        "bTGOi"
+      ],
+      "data": "[]",
+      "action": "write"
+    },
+    {
+      "last_change_date": 1775441265366,
+      "last_change": 56632442037,
+      "path": [
+        "settings",
+        "client_safe",
+        "feature_flags",
+        "vc_changelog"
+      ],
+      "data": true,
+      "action": "write"
+    },
+    {
+      "last_change_date": 1775442083604,
+      "last_change": 56632487040,
+      "path": [
+        "settings",
+        "client_safe",
+        "apiconnector2",
+        "bTGLo"
+      ],
+      "data": null,
+      "action": "write"
+    },
+    {
+      "last_change_date": 1775516128844,
+      "last_change": 56640618763,
+      "path": [
+        "closest_ancestor_snapshots"
+      ],
+      "data": {
+        "1775066104224": true
+      },
+      "action": "write"
+    }
+  ],
+  "total": 1129
+}

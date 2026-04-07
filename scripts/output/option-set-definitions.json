@@ -1,0 +1,70 @@
+{
+  "usertype": {
+    "%d": "userType",
+    "creation_source": "editor"
+  },
+  "entrystatus": {
+    "%d": "EntryStatus",
+    "creation_source": "editor"
+  },
+  "itemtype": {
+    "%d": "ItemType",
+    "creation_source": "editor"
+  },
+  "shippingoption": {
+    "%d": "ShippingOption",
+    "creation_source": "editor"
+  },
+  "itemapprovalstatus": {
+    "%d": "ItemApprovalStatus",
+    "creation_source": "editor"
+  },
+  "wallettransactiontype": {
+    "%d": "WalletTransactionType",
+    "creation_source": "editor"
+  },
+  "drawmethod": {
+    "%d": "DrawMethod",
+    "creation_source": "editor"
+  },
+  "notificationtype": {
+    "%d": "NotificationType",
+    "creation_source": "editor"
+  },
+  "notificationtype0": {
+    "%d": "NotificationType",
+    "creation_source": "editor"
+  },
+  "referralrewardstatus": {
+    "%d": "ReferralRewardStatus",
+    "creation_source": "editor"
+  },
+  "permitstatus": {
+    "%d": "PermitStatus",
+    "creation_source": "editor"
+  },
+  "userrole": {
+    "%d": "UserRole",
+    "creation_source": "editor"
+  },
+  "accountstatus": {
+    "%d": "AccountStatus",
+    "creation_source": "editor"
+  },
+  "giveawaystatus": {
+    "%d": "GiveawayStatus",
+    "creation_source": "editor"
+  },
+  "australianstate": {
+    "%d": "AustralianState",
+    "creation_source": "editor"
+  },
+  "accessperiodtype": {
+    "%d": "AccessPeriodType",
+    "creation_source": "editor"
+  },
+  "partnerstatus": {
+    "%d": "PartnerStatus",
+    "creation_source": "editor"
+  }
+}
