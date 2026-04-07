@@ -7,6 +7,11 @@ import { loadEditorConfig } from './config.js';
 import { EditorClient } from './auth/editor-client.js';
 import { createEditorStatusTool } from './tools/core/editor-status.js';
 import { createAppStructureTool } from './tools/core/app-structure.js';
+import { createPageListTool } from './tools/core/page-list.js';
+import { createPageTool } from './tools/core/page.js';
+import { createPageElementsTool } from './tools/core/page-elements.js';
+import { createPageWorkflowsTool } from './tools/core/page-workflows.js';
+import { createDataTypeTool } from './tools/core/data-type.js';
 import type { BubbleConfig, ToolDefinition, SeedTracker } from './types.js';
 import { createSchemaTool } from './tools/core/schema.js';
 import { createSearchTool } from './tools/core/search.js';
@@ -178,5 +183,10 @@ function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
   return [
     createEditorStatusTool(editorClient),
     createAppStructureTool(editorClient),
+    createPageListTool(editorClient),
+    createPageTool(editorClient),
+    createPageElementsTool(editorClient),
+    createPageWorkflowsTool(editorClient),
+    createDataTypeTool(editorClient),
   ];
 }
