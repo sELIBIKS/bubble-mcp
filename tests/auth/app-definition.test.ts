@@ -64,6 +64,76 @@ describe('AppDefinition', () => {
     expect(Object.keys(wallet!.privacyRoles)).toContain('admin');
   });
 
+  it('extracts page paths from _index/page_name_to_path changes', () => {
+    const changes: EditorChange[] = [
+      makeChange(['_index', 'page_name_to_id'], { index: 'bTGYf', '404': 'AAU' }),
+      makeChange(['_index', 'page_name_to_path'], { index: '%p3.bTGbC', '404': '%p3.AAX' }),
+    ];
+    const def = AppDefinition.fromChanges(changes);
+    const pagePaths = def.getPagePaths();
+    expect(pagePaths).toHaveLength(2);
+    expect(pagePaths).toContainEqual({ name: 'index', id: 'bTGYf', path: '%p3.bTGbC' });
+    expect(pagePaths).toContainEqual({ name: '404', id: 'AAU', path: '%p3.AAX' });
+  });
+
+  it('returns page paths with null path when only page_name_to_id is present', () => {
+    const changes: EditorChange[] = [
+      makeChange(['_index', 'page_name_to_id'], { index: 'abc' }),
+    ];
+    const def = AppDefinition.fromChanges(changes);
+    const pagePaths = def.getPagePaths();
+    expect(pagePaths).toHaveLength(1);
+    expect(pagePaths[0]).toEqual({ name: 'index', id: 'abc', path: null });
+  });
+
+  it('captures deep fields from user_types path length 4 with %f3', () => {
+    const changes: EditorChange[] = [
+      makeChange(['user_types', 'wallet'], { '%d': 'Wallet', privacy_role: {} }),
+      makeChange(['user_types', 'wallet', '%f3', 'fieldA'], {
+        '%d': 'Balance',
+        '%t': 'number',
+        '%o': false,
+      }),
+      makeChange(['user_types', 'wallet', '%f3', 'fieldB'], {
+        '%d': 'Owner',
+        '%t': 'custom.user',
+        '%o': false,
+      }),
+    ];
+    const def = AppDefinition.fromChanges(changes);
+    const types = def.getDataTypes();
+    const wallet = types.find((t) => t.name === 'Wallet');
+    expect(wallet).toBeDefined();
+    expect(wallet!.deepFields).toBeDefined();
+    expect(wallet!.deepFields).toHaveLength(2);
+    expect(wallet!.deepFields![0]).toEqual({
+      key: 'fieldA',
+      name: 'Balance',
+      fieldType: 'number',
+      isList: false,
+      raw: { '%d': 'Balance', '%t': 'number', '%o': false },
+    });
+  });
+
+  it('resolves page path by name', () => {
+    const changes: EditorChange[] = [
+      makeChange(['_index', 'page_name_to_id'], { index: 'bTGYf' }),
+      makeChange(['_index', 'page_name_to_path'], { index: '%p3.bTGbC' }),
+    ];
+    const def = AppDefinition.fromChanges(changes);
+    expect(def.resolvePagePath('index')).toBe('%p3.bTGbC');
+    expect(def.resolvePagePath('nonexistent')).toBeNull();
+  });
+
+  it('resolves page ID by name', () => {
+    const changes: EditorChange[] = [
+      makeChange(['_index', 'page_name_to_id'], { index: 'bTGYf' }),
+    ];
+    const def = AppDefinition.fromChanges(changes);
+    expect(def.resolvePageId('index')).toBe('bTGYf');
+    expect(def.resolvePageId('nonexistent')).toBeNull();
+  });
+
   it('provides a summary with counts', () => {
     const changes: EditorChange[] = [
       makeChange(['user_types', 'a'], { '%d': 'A', privacy_role: {} }),

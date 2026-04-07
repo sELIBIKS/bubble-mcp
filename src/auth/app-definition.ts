@@ -1,10 +1,25 @@
 import type { EditorChange } from './editor-client.js';
 
+export interface DeepFieldDef {
+  key: string;
+  name: string;
+  fieldType: string;
+  isList: boolean;
+  raw: unknown;
+}
+
 export interface DataTypeDef {
   key: string;
   name: string;
   privacyRoles: Record<string, unknown>;
   fields: Record<string, unknown>;
+  deepFields?: DeepFieldDef[];
+}
+
+export interface PagePathInfo {
+  name: string;
+  id: string;
+  path: string | null;
 }
 
 export interface OptionSetDef {
@@ -27,16 +42,26 @@ export class AppDefinition {
   private userTypes = new Map<string, unknown>();
   private optionSets = new Map<string, unknown>();
   private pages = new Map<string, string>();
+  private pagePaths = new Map<string, string>();
+  private deepFieldStore = new Map<string, Map<string, unknown>>();
   private settingsMap = new Map<string, unknown>();
 
   static fromChanges(changes: EditorChange[]): AppDefinition {
     const def = new AppDefinition();
 
     for (const change of changes) {
-      const [root, sub] = change.path;
+      const [root, sub, marker, fieldKey] = change.path;
 
       if (root === 'user_types' && sub && change.path.length === 2) {
         def.userTypes.set(sub, change.data);
+      }
+
+      // Deep field: user_types/<typeKey>/%f3/<fieldKey>
+      if (root === 'user_types' && sub && marker === '%f3' && fieldKey && change.path.length === 4) {
+        if (!def.deepFieldStore.has(sub)) {
+          def.deepFieldStore.set(sub, new Map());
+        }
+        def.deepFieldStore.get(sub)!.set(fieldKey, change.data);
       }
 
       if (root === 'option_sets' && sub && change.path.length === 2) {
@@ -47,6 +72,13 @@ export class AppDefinition {
         const pageMap = change.data as Record<string, string>;
         for (const [name, id] of Object.entries(pageMap)) {
           def.pages.set(name, id);
+        }
+      }
+
+      if (root === '_index' && sub === 'page_name_to_path' && change.path.length === 2) {
+        const pathMap = change.data as Record<string, string>;
+        for (const [name, path] of Object.entries(pathMap)) {
+          def.pagePaths.set(name, path);
         }
       }
 
@@ -62,6 +94,20 @@ export class AppDefinition {
     const result: DataTypeDef[] = [];
     for (const [key, raw] of this.userTypes) {
       const obj = raw as Record<string, unknown>;
+      const deepFieldMap = this.deepFieldStore.get(key);
+      const deepFields: DeepFieldDef[] | undefined = deepFieldMap
+        ? [...deepFieldMap.entries()].map(([fKey, fRaw]) => {
+            const fObj = fRaw as Record<string, unknown>;
+            return {
+              key: fKey,
+              name: (fObj['%d'] as string) || fKey,
+              fieldType: (fObj['%t'] as string) || 'unknown',
+              isList: (fObj['%o'] as boolean) || false,
+              raw: fRaw,
+            };
+          })
+        : undefined;
+
       result.push({
         key,
         name: (obj['%d'] as string) || key,
@@ -69,6 +115,7 @@ export class AppDefinition {
         fields: Object.fromEntries(
           Object.entries(obj).filter(([k]) => !k.startsWith('%') && k !== 'privacy_role'),
         ),
+        deepFields,
       });
     }
     return result;
@@ -90,6 +137,26 @@ export class AppDefinition {
 
   getPageNames(): string[] {
     return [...this.pages.keys()];
+  }
+
+  getPagePaths(): PagePathInfo[] {
+    const result: PagePathInfo[] = [];
+    for (const [name, id] of this.pages) {
+      result.push({
+        name,
+        id,
+        path: this.pagePaths.get(name) ?? null,
+      });
+    }
+    return result;
+  }
+
+  resolvePagePath(pageName: string): string | null {
+    return this.pagePaths.get(pageName) ?? null;
+  }
+
+  resolvePageId(pageName: string): string | null {
+    return this.pages.get(pageName) ?? null;
   }
 
   getSettings(): Record<string, unknown> {
