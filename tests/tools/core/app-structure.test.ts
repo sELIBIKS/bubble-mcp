@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createAppStructureTool } from '../../../src/tools/core/app-structure.js';
 
 const mockGetChanges = vi.fn();
+const mockLoadPaths = vi.fn();
 const mockClient = {
   getChanges: mockGetChanges,
+  loadPaths: mockLoadPaths,
   appId: 'test-app',
   version: 'test',
   validateSession: vi.fn().mockResolvedValue(true),
@@ -12,6 +14,11 @@ const mockClient = {
 describe('bubble_get_app_structure', () => {
   beforeEach(() => {
     mockGetChanges.mockReset();
+    mockLoadPaths.mockReset();
+    mockLoadPaths.mockResolvedValue({
+      last_change: 1,
+      data: [{ data: null }, { data: null }],
+    });
   });
 
   it('has correct name and mode', () => {

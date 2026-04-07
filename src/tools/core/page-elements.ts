@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ToolDefinition } from '../../types.js';
 import type { EditorClient } from '../../auth/editor-client.js';
-import { AppDefinition } from '../../auth/app-definition.js';
+import { loadAppDefinition } from '../../auth/load-app-definition.js';
 import { parsePageElements } from '../../auth/page-parser.js';
 import { successResult } from '../../middleware/error-handler.js';
 
@@ -29,8 +29,7 @@ export function createPageElementsTool(editorClient: EditorClient): ToolDefiniti
       const elementType = args.element_type as string | undefined;
 
       // Resolve page
-      const changes = await editorClient.getChanges(0);
-      const def = AppDefinition.fromChanges(changes);
+      const def = await loadAppDefinition(editorClient);
       const pagePath = def.resolvePagePath(pageName);
       const pageId = def.resolvePageId(pageName);
 

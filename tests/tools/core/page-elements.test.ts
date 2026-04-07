@@ -23,6 +23,14 @@ const indexChanges = [
   },
 ];
 
+const indexLoadPathsResult = {
+  last_change: 1,
+  data: [
+    { data: { index: 'bTGYf' } },
+    { data: { index: '%p3.bTGbC' } },
+  ],
+};
+
 describe('bubble_get_page_elements', () => {
   beforeEach(() => {
     mockGetChanges.mockReset();
@@ -37,7 +45,7 @@ describe('bubble_get_page_elements', () => {
 
   it('returns all elements for a page', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
+    mockLoadPaths.mockResolvedValueOnce(indexLoadPathsResult).mockResolvedValueOnce({
       last_change: 1,
       data: [
         {
@@ -82,7 +90,7 @@ describe('bubble_get_page_elements', () => {
 
   it('filters elements by type', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
+    mockLoadPaths.mockResolvedValueOnce(indexLoadPathsResult).mockResolvedValueOnce({
       last_change: 1,
       data: [
         {
@@ -106,6 +114,7 @@ describe('bubble_get_page_elements', () => {
 
   it('returns error when page not found', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
+    mockLoadPaths.mockResolvedValueOnce(indexLoadPathsResult);
 
     const tool = createPageElementsTool(mockClient as any);
     const result = await tool.handler({ page_name: 'nonexistent' });
@@ -116,7 +125,7 @@ describe('bubble_get_page_elements', () => {
 
   it('handles page with no elements', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
+    mockLoadPaths.mockResolvedValueOnce(indexLoadPathsResult).mockResolvedValueOnce({
       last_change: 1,
       data: [{ data: {} }],
     });

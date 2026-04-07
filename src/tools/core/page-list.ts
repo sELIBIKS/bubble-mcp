@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ToolDefinition } from '../../types.js';
 import type { EditorClient } from '../../auth/editor-client.js';
-import { AppDefinition } from '../../auth/app-definition.js';
+import { loadAppDefinition } from '../../auth/load-app-definition.js';
 import { successResult } from '../../middleware/error-handler.js';
 
 export function createPageListTool(editorClient: EditorClient): ToolDefinition {
@@ -24,8 +24,7 @@ export function createPageListTool(editorClient: EditorClient): ToolDefinition {
     },
     async handler(args) {
       const detail = (args.detail as string) || 'names';
-      const changes = await editorClient.getChanges(0);
-      const def = AppDefinition.fromChanges(changes);
+      const def = await loadAppDefinition(editorClient);
 
       if (detail === 'full') {
         const pagePaths = def.getPagePaths();

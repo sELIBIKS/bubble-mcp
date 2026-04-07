@@ -23,6 +23,14 @@ const indexChanges = [
   },
 ];
 
+const indexLoadPathsResult = {
+  last_change: 1,
+  data: [
+    { data: { index: 'bTGYf' } },
+    { data: { index: '%p3.bTGbC' } },
+  ],
+};
+
 const mockWfData = {
   wf1: {
     '%x': 'PageLoaded',
@@ -65,10 +73,12 @@ describe('bubble_get_page_workflows', () => {
 
   it('returns all workflows for a page', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
-      last_change: 1,
-      data: [{ data: mockWfData }],
-    });
+    mockLoadPaths
+      .mockResolvedValueOnce(indexLoadPathsResult)
+      .mockResolvedValueOnce({
+        last_change: 1,
+        data: [{ data: mockWfData }],
+      });
 
     const tool = createPageWorkflowsTool(mockClient as any);
     const result = await tool.handler({ page_name: 'index' });
@@ -82,10 +92,12 @@ describe('bubble_get_page_workflows', () => {
 
   it('includes human-readable condition strings by default', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
-      last_change: 1,
-      data: [{ data: mockWfData }],
-    });
+    mockLoadPaths
+      .mockResolvedValueOnce(indexLoadPathsResult)
+      .mockResolvedValueOnce({
+        last_change: 1,
+        data: [{ data: mockWfData }],
+      });
 
     const tool = createPageWorkflowsTool(mockClient as any);
     const result = await tool.handler({ page_name: 'index' });
@@ -98,10 +110,12 @@ describe('bubble_get_page_workflows', () => {
 
   it('includes raw expressions when include_expressions is true', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
-      last_change: 1,
-      data: [{ data: mockWfData }],
-    });
+    mockLoadPaths
+      .mockResolvedValueOnce(indexLoadPathsResult)
+      .mockResolvedValueOnce({
+        last_change: 1,
+        data: [{ data: mockWfData }],
+      });
 
     const tool = createPageWorkflowsTool(mockClient as any);
     const result = await tool.handler({ page_name: 'index', include_expressions: true });
@@ -114,10 +128,12 @@ describe('bubble_get_page_workflows', () => {
 
   it('filters workflows by event type', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
-      last_change: 1,
-      data: [{ data: mockWfData }],
-    });
+    mockLoadPaths
+      .mockResolvedValueOnce(indexLoadPathsResult)
+      .mockResolvedValueOnce({
+        last_change: 1,
+        data: [{ data: mockWfData }],
+      });
 
     const tool = createPageWorkflowsTool(mockClient as any);
     const result = await tool.handler({ page_name: 'index', event_type: 'PageLoaded' });
@@ -130,6 +146,7 @@ describe('bubble_get_page_workflows', () => {
 
   it('returns error when page not found', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
+    mockLoadPaths.mockResolvedValueOnce(indexLoadPathsResult);
 
     const tool = createPageWorkflowsTool(mockClient as any);
     const result = await tool.handler({ page_name: 'nonexistent' });

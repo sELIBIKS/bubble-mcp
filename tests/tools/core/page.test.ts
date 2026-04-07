@@ -23,6 +23,14 @@ const indexChanges = [
   },
 ];
 
+const indexLoadPathsResult = {
+  last_change: 1,
+  data: [
+    { data: { index: 'bTGYf', dashboard: 'xyz' } },
+    { data: { index: '%p3.bTGbC', dashboard: '%p3.xyzP' } },
+  ],
+};
+
 describe('bubble_get_page', () => {
   beforeEach(() => {
     mockGetChanges.mockReset();
@@ -37,21 +45,23 @@ describe('bubble_get_page', () => {
 
   it('returns page info with workflows', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
-      last_change: 1,
-      data: [
-        {
-          data: {
-            wf1: {
-              '%x': 'PageLoaded',
-              id: 'wf1',
-              actions: [{ '%x': 'NavigateTo', '%p': {} }],
-              '%c': null,
+    mockLoadPaths
+      .mockResolvedValueOnce(indexLoadPathsResult)
+      .mockResolvedValueOnce({
+        last_change: 1,
+        data: [
+          {
+            data: {
+              wf1: {
+                '%x': 'PageLoaded',
+                id: 'wf1',
+                actions: [{ '%x': 'NavigateTo', '%p': {} }],
+                '%c': null,
+              },
             },
           },
-        },
-      ],
-    });
+        ],
+      });
 
     const tool = createPageTool(mockClient as any);
     const result = await tool.handler({ page_name: 'index' });
@@ -67,6 +77,7 @@ describe('bubble_get_page', () => {
 
   it('returns error when page not found', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
+    mockLoadPaths.mockResolvedValueOnce(indexLoadPathsResult);
 
     const tool = createPageTool(mockClient as any);
     const result = await tool.handler({ page_name: 'nonexistent' });
@@ -79,10 +90,12 @@ describe('bubble_get_page', () => {
 
   it('handles page with no workflows', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
-      last_change: 1,
-      data: [{ data: {} }],
-    });
+    mockLoadPaths
+      .mockResolvedValueOnce(indexLoadPathsResult)
+      .mockResolvedValueOnce({
+        last_change: 1,
+        data: [{ data: {} }],
+      });
 
     const tool = createPageTool(mockClient as any);
     const result = await tool.handler({ page_name: 'index' });
@@ -92,10 +105,12 @@ describe('bubble_get_page', () => {
 
   it('handles page with null loadPaths data', async () => {
     mockGetChanges.mockResolvedValue(indexChanges);
-    mockLoadPaths.mockResolvedValue({
-      last_change: 1,
-      data: [{ data: null }],
-    });
+    mockLoadPaths
+      .mockResolvedValueOnce(indexLoadPathsResult)
+      .mockResolvedValueOnce({
+        last_change: 1,
+        data: [{ data: null }],
+      });
 
     const tool = createPageTool(mockClient as any);
     const result = await tool.handler({ page_name: 'index' });

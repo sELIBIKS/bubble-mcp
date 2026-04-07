@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ToolDefinition } from '../../types.js';
 import type { EditorClient } from '../../auth/editor-client.js';
-import { AppDefinition } from '../../auth/app-definition.js';
+import { loadAppDefinition } from '../../auth/load-app-definition.js';
 import { parsePageWorkflows } from '../../auth/page-parser.js';
 import { successResult } from '../../middleware/error-handler.js';
 
@@ -24,8 +24,7 @@ export function createPageTool(editorClient: EditorClient): ToolDefinition {
       const pageName = args.page_name as string;
 
       // Resolve page name to path
-      const changes = await editorClient.getChanges(0);
-      const def = AppDefinition.fromChanges(changes);
+      const def = await loadAppDefinition(editorClient);
 
       const pagePath = def.resolvePagePath(pageName);
       const pageId = def.resolvePageId(pageName);

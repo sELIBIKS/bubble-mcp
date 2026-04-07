@@ -55,6 +55,10 @@ describe('bubble_get_data_type', () => {
   beforeEach(() => {
     mockGetChanges.mockReset();
     mockLoadPaths.mockReset();
+    mockLoadPaths.mockResolvedValue({
+      last_change: 1,
+      data: [{ data: null }, { data: null }],
+    });
   });
 
   it('has correct name and mode', () => {

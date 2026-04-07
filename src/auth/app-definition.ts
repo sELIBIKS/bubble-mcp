@@ -159,6 +159,26 @@ export class AppDefinition {
     return this.pages.get(pageName) ?? null;
   }
 
+  /**
+   * Merge page index data loaded directly via EditorClient.loadPaths().
+   * Call this after fromChanges() when the changes stream doesn't contain page_name_to_id.
+   */
+  mergePageIndexes(
+    pageNameToId: Record<string, string> | null,
+    pageNameToPath: Record<string, string> | null,
+  ): void {
+    if (pageNameToId) {
+      for (const [name, id] of Object.entries(pageNameToId)) {
+        if (!this.pages.has(name)) this.pages.set(name, id);
+      }
+    }
+    if (pageNameToPath) {
+      for (const [name, path] of Object.entries(pageNameToPath)) {
+        if (!this.pagePaths.has(name)) this.pagePaths.set(name, path);
+      }
+    }
+  }
+
   getSettings(): Record<string, unknown> {
     return Object.fromEntries(this.settingsMap);
   }

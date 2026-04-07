@@ -31,6 +31,13 @@ describe('bubble_get_page_list', () => {
         data: { index: 'bTGYf', '404': 'AAU', dashboard: 'xyz' },
       },
     ]);
+    mockLoadPaths.mockResolvedValueOnce({
+      last_change: 1,
+      data: [
+        { data: { index: 'bTGYf', '404': 'AAU', dashboard: 'xyz' } },
+        { data: null },
+      ],
+    });
 
     const tool = createPageListTool(mockClient as any);
     const result = await tool.handler({ detail: 'names' });
@@ -52,6 +59,13 @@ describe('bubble_get_page_list', () => {
         data: { index: '%p3.bTGbC', '404': '%p3.AAX' },
       },
     ]);
+    mockLoadPaths.mockResolvedValueOnce({
+      last_change: 1,
+      data: [
+        { data: { index: 'bTGYf', '404': 'AAU' } },
+        { data: { index: '%p3.bTGbC', '404': '%p3.AAX' } },
+      ],
+    });
 
     const tool = createPageListTool(mockClient as any);
     const result = await tool.handler({ detail: 'full' });
@@ -69,6 +83,13 @@ describe('bubble_get_page_list', () => {
         data: { index: 'abc' },
       },
     ]);
+    mockLoadPaths.mockResolvedValueOnce({
+      last_change: 1,
+      data: [
+        { data: { index: 'abc' } },
+        { data: null },
+      ],
+    });
 
     const tool = createPageListTool(mockClient as any);
     const result = await tool.handler({});

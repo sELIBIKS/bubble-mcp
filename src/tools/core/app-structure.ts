@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ToolDefinition } from '../../types.js';
 import type { EditorClient } from '../../auth/editor-client.js';
-import { AppDefinition } from '../../auth/app-definition.js';
+import { loadAppDefinition } from '../../auth/load-app-definition.js';
 import { successResult } from '../../middleware/error-handler.js';
 
 export function createAppStructureTool(editorClient: EditorClient): ToolDefinition {
@@ -21,8 +21,7 @@ export function createAppStructureTool(editorClient: EditorClient): ToolDefiniti
     },
     async handler(args) {
       const detail = (args.detail as string) || 'summary';
-      const changes = await editorClient.getChanges(0);
-      const def = AppDefinition.fromChanges(changes);
+      const def = await loadAppDefinition(editorClient);
 
       if (detail === 'full') {
         return successResult({
