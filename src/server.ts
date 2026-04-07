@@ -17,6 +17,14 @@ import { createStylesTool } from './tools/core/styles.js';
 import { createAppSettingsTool } from './tools/core/app-settings.js';
 import { createReusableElementsTool } from './tools/core/reusable-elements.js';
 import { createAppMapTool } from './tools/core/app-map.js';
+import { createCreateDataTypeTool } from './tools/core/write-create-type.js';
+import { createCreateFieldTool } from './tools/core/write-create-field.js';
+import { createUpdateFieldTool } from './tools/core/write-update-field.js';
+import { createDeleteFieldTool } from './tools/core/write-delete-field.js';
+import { createDeleteDataTypeTool } from './tools/core/write-delete-type.js';
+import { createCreateOptionSetTool } from './tools/core/write-create-option-set.js';
+import { createUpdateOptionSetTool } from './tools/core/write-update-option-set.js';
+import { createDeleteOptionSetTool } from './tools/core/write-delete-option-set.js';
 import type { BubbleConfig, ToolDefinition, SeedTracker } from './types.js';
 import { createSchemaTool } from './tools/core/schema.js';
 import { createSearchTool } from './tools/core/search.js';
@@ -198,5 +206,14 @@ function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
     createAppSettingsTool(editorClient),
     createReusableElementsTool(editorClient),
     createAppMapTool(editorClient),
+    // Write tools (Phase 2)
+    createCreateDataTypeTool(editorClient),
+    createCreateFieldTool(editorClient),
+    createUpdateFieldTool(editorClient),
+    createDeleteFieldTool(editorClient),
+    createDeleteDataTypeTool(editorClient),
+    createCreateOptionSetTool(editorClient),
+    createUpdateOptionSetTool(editorClient),
+    createDeleteOptionSetTool(editorClient),
   ];
 }

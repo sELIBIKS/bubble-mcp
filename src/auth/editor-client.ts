@@ -25,6 +25,27 @@ export interface LoadPathsResult {
   }>;
 }
 
+export interface WriteChange {
+  body: unknown;
+  pathArray: string[];
+}
+
+export interface WriteResult {
+  last_change: string;
+  last_change_date: string;
+  id_counter: string;
+}
+
+export interface UserPermissions {
+  admin: boolean;
+  permissions: {
+    app: string;
+    logs: string;
+    data: string;
+  };
+  test_only: boolean;
+}
+
 export class EditorClient {
   private readonly base = 'https://bubble.io';
   private readonly sessionId: string;
@@ -54,6 +75,28 @@ export class EditorClient {
     return this.get<EditorChange[]>(
       `/appeditor/changes/${this.appId}/${this.version}/${since}/${this.sessionId}`,
     );
+  }
+
+  async write(changes: WriteChange[]): Promise<WriteResult> {
+    if (changes.length === 0) {
+      throw new EditorApiError(400, 'At least one change is required');
+    }
+    return this.post<WriteResult>('/appeditor/write', {
+      v: 1,
+      appname: this.appId,
+      app_version: this.version,
+      changes: changes.map((c) => ({
+        body: c.body,
+        path_array: c.pathArray,
+        session_id: this.sessionId,
+      })),
+    });
+  }
+
+  async checkPermissions(): Promise<UserPermissions> {
+    return this.post<UserPermissions>('/appeditor/get_current_user_permissions', {
+      appname: this.appId,
+    });
   }
 
   async validateSession(): Promise<boolean> {
