@@ -1,0 +1,109 @@
+export class EditorApiError extends Error {
+  constructor(
+    public code: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'EditorApiError';
+  }
+}
+
+export interface EditorChange {
+  last_change_date: number;
+  last_change: number;
+  path: string[];
+  data: unknown;
+  action: string;
+}
+
+export interface LoadPathsResult {
+  last_change: number;
+  data: Array<{
+    data?: unknown;
+    keys?: string[];
+    path_version_hash?: string;
+  }>;
+}
+
+export class EditorClient {
+  private readonly base = 'https://bubble.io';
+  private readonly sessionId: string;
+
+  constructor(
+    public readonly appId: string,
+    public readonly version: string,
+    private readonly cookieHeader: string,
+  ) {
+    this.sessionId = `bubble-mcp-${Date.now()}`;
+  }
+
+  async loadPaths(pathArrays: string[][]): Promise<LoadPathsResult> {
+    return this.post<LoadPathsResult>(
+      `/appeditor/load_multiple_paths/${this.appId}/${this.version}`,
+      { path_arrays: pathArrays },
+    );
+  }
+
+  async loadSinglePath(
+    path: string,
+  ): Promise<{ last_change: number; path_version_hash?: string; data?: unknown }> {
+    return this.get(`/appeditor/load_single_path/${this.appId}/${this.version}/0/${path}`);
+  }
+
+  async getChanges(since: number = 0): Promise<EditorChange[]> {
+    return this.get<EditorChange[]>(
+      `/appeditor/changes/${this.appId}/${this.version}/${since}/${this.sessionId}`,
+    );
+  }
+
+  async validateSession(): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.base}/user/hi`, {
+        headers: this.headers(),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  private headers(): Record<string, string> {
+    return {
+      Cookie: this.cookieHeader,
+      'User-Agent': 'Mozilla/5.0 (compatible; bubble-mcp/0.1.0)',
+      Accept: 'application/json',
+      Referer: `${this.base}/page?id=${this.appId}&tab=Design&name=index`,
+      Origin: this.base,
+    };
+  }
+
+  private async get<T = unknown>(path: string): Promise<T> {
+    const res = await fetch(`${this.base}${path}`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => 'Unknown error');
+      throw new EditorApiError(
+        res.status,
+        `Editor API error (${res.status}): ${text.slice(0, 200)}`,
+      );
+    }
+    return res.json() as Promise<T>;
+  }
+
+  private async post<T = unknown>(path: string, body: unknown): Promise<T> {
+    const res = await fetch(`${this.base}${path}`, {
+      method: 'POST',
+      headers: { ...this.headers(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => 'Unknown error');
+      throw new EditorApiError(
+        res.status,
+        `Editor API error (${res.status}): ${text.slice(0, 200)}`,
+      );
+    }
+    return res.json() as Promise<T>;
+  }
+}
