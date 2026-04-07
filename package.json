@@ -12,6 +12,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
+    "setup": "tsx src/cli.ts setup",
     "auth": "tsx src/cli.ts auth",
     "test": "vitest run",
     "test:watch": "vitest",

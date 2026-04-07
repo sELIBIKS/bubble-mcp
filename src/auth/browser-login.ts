@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { createSessionManager, type StoredCookie } from './session-manager.js';
 
 interface PlaywrightCookie {
@@ -24,17 +25,31 @@ export function validateSession(cookies: StoredCookie[]): boolean {
 
 const LOGIN_URL = 'https://bubble.io/log-in';
 
-export async function browserLogin(appId: string): Promise<void> {
-  let chromium;
+async function loadPlaywright() {
+  const moduleName = 'playwright';
   try {
-    const moduleName = 'playwright';
     const pw = await import(/* webpackIgnore: true */ moduleName);
-    chromium = pw.chromium;
+    return pw.chromium;
   } catch {
-    console.error('Playwright is required for browser auth.');
-    console.error('Install it with: npm install playwright && npx playwright install chromium');
+    // Not installed — auto-install it
+  }
+
+  console.log('Installing Playwright (first-time setup)...');
+  try {
+    execFileSync('npm', ['install', 'playwright'], { stdio: 'inherit' });
+    console.log('Installing Chromium browser...');
+    execFileSync('npx', ['playwright', 'install', 'chromium'], { stdio: 'inherit' });
+    const pw = await import(/* webpackIgnore: true */ moduleName);
+    return pw.chromium;
+  } catch {
+    console.error('Failed to install Playwright automatically.');
+    console.error('Please install manually: npm install playwright && npx playwright install chromium');
     process.exit(1);
   }
+}
+
+export async function browserLogin(appId: string): Promise<void> {
+  const chromium = await loadPlaywright();
 
   console.log(`Opening browser for Bubble login...`);
   console.log(`After logging in, navigate to the editor for app "${appId}" if not redirected.`);
