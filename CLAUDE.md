@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run build        # Compile TypeScript to dist/
 npm run dev          # Run from source via tsx (no build needed)
-npm test             # Run all 179 tests (vitest)
+npm run setup <id>   # Browser auth for editor access (first-time)
+npm test             # Run all 213+ tests (vitest)
 npm run test:watch   # Tests in watch mode
 npm run lint         # ESLint
 npm run lint:fix     # ESLint with auto-fix
@@ -20,7 +21,7 @@ npx vitest run tests/tools/core/search.test.ts
 
 ## Architecture
 
-This is an MCP server for Bubble.io that exposes 28 tools over stdio transport. Tools are organized in three layers with a hierarchical permission model.
+This is an MCP server for Bubble.io that exposes 30 tools over stdio transport. Tools are organized in three layers (plus optional editor tools) with a hierarchical permission model.
 
 ### Entry Flow
 
@@ -43,6 +44,19 @@ This is an MCP server for Bubble.io that exposes 28 tools over stdio transport. 
 | Core | `src/tools/core/` | 11 | CRUD, search, schema, workflows, swagger |
 | Compound | `src/tools/compound/` | 7 | Multi-step analysis (privacy audit, orphans, field usage) |
 | Developer | `src/tools/developer/` | 10 | TDD validation, migration planning, seed data |
+| Editor | `src/tools/core/` | 2 | App structure, editor session (requires browser auth) |
+
+### Editor Auth (`src/auth/`)
+
+Optional browser-based authentication for accessing Bubble's internal editor endpoints. Provides deep app structure access (pages, workflows, data types with privacy rules, option sets) beyond what the Data API offers.
+
+- **Setup:** `npm run setup <app-id>` — opens Playwright browser, user logs in, cookies are captured after redirect to `bubble.io/home/projects`, then editor page is visited for app-specific session state
+- **Storage:** `~/.bubble-mcp/sessions.json` — per-app session cookies
+- **Session Manager** (`session-manager.ts`) — CRUD for stored cookies
+- **Browser Login** (`browser-login.ts`) — Playwright headed browser flow, auto-installs Playwright if missing
+- **Editor Client** (`editor-client.ts`) — HTTP client for `/appeditor/*` endpoints (load_multiple_paths, load_single_path, changes)
+- **App Definition** (`app-definition.ts`) — Parses editor change stream into structured data types, option sets, pages, settings
+- **Auto-detection:** Server loads cookies on startup; editor tools only register if a valid session exists
 
 ### Adding a New Tool
 
@@ -69,6 +83,7 @@ HTTP client that wraps `fetch` with Bearer token auth. Appends `/version-test` t
 - `ToolAnnotations` — MCP hints: readOnlyHint, destructiveHint, idempotentHint, openWorldHint
 - `BubbleConfig` — appUrl, apiToken, mode, environment, rateLimit
 - `SeedTracker` — tracks seeded record IDs for cleanup
+- `EditorConfig` — appId, version, cookieHeader (for editor session)
 
 ## Testing Patterns
 

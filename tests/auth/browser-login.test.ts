@@ -14,6 +14,15 @@ describe('extractBubbleCookies', () => {
     expect(result.every((c) => c.domain === '.bubble.io')).toBe(true);
   });
 
+  it('includes cookies from bubble.io domain without dot prefix', () => {
+    const allCookies = [
+      { name: 'editor_visits_count', value: '5', domain: 'bubble.io', path: '/', expires: -1, httpOnly: false, secure: false, sameSite: 'Lax' as const },
+      { name: 'meta_u1main', value: 'u1', domain: '.bubble.io', path: '/', expires: -1, httpOnly: false, secure: false, sameSite: 'Lax' as const },
+    ];
+    const result = extractBubbleCookies(allCookies);
+    expect(result).toHaveLength(2);
+  });
+
   it('returns empty array when no bubble cookies present', () => {
     const result = extractBubbleCookies([
       { name: '_ga', value: 'x', domain: '.google.com', path: '/', expires: -1, httpOnly: false, secure: false, sameSite: 'Lax' as const },
