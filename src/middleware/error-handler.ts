@@ -1,4 +1,5 @@
 import { BubbleApiError } from '../bubble-client.js';
+import { EditorApiError } from '../auth/editor-client.js';
 import type { ToolResult } from '../types.js';
 import { truncateResponse } from '../shared/constants.js';
 
@@ -19,7 +20,29 @@ function getErrorHint(code: number): string {
   }
 }
 
+function getEditorErrorHint(code: number): string {
+  if (code === 401 || code === 403) {
+    return 'Editor session expired. Re-authenticate with: npm run setup <app-id>';
+  }
+  return `Editor API returned ${code}. The session may be invalid — try: npm run setup <app-id>`;
+}
+
 export function handleToolError(error: unknown): ToolResult {
+  if (error instanceof EditorApiError) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: error.message,
+            code: error.code,
+            hint: getEditorErrorHint(error.code),
+          }),
+        },
+      ],
+      isError: true,
+    };
+  }
   if (error instanceof BubbleApiError) {
     return {
       content: [

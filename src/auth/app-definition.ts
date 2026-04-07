@@ -29,10 +29,27 @@ export interface OptionSetDef {
   raw: unknown;
 }
 
+export interface ApiConnectorDef {
+  key: string;
+  name: string;
+  calls: Record<string, unknown>;
+  raw: unknown;
+}
+
+export interface StyleDef {
+  key: string;
+  name: string;
+  elementType: string;
+  properties: Record<string, unknown>;
+  raw: unknown;
+}
+
 export interface AppSummary {
   dataTypeCount: number;
   optionSetCount: number;
   pageCount: number;
+  apiConnectorCount: number;
+  reusableElementCount: number;
   dataTypeNames: string[];
   optionSetNames: string[];
   pageNames: string[];
@@ -45,6 +62,9 @@ export class AppDefinition {
   private pagePaths = new Map<string, string>();
   private deepFieldStore = new Map<string, Map<string, unknown>>();
   private settingsMap = new Map<string, unknown>();
+  private apiConnectors = new Map<string, Map<string, unknown>>();
+  private stylesMap = new Map<string, unknown>();
+  private reusableElementIndex = new Map<string, string>();
 
   static fromChanges(changes: EditorChange[]): AppDefinition {
     const def = new AppDefinition();
@@ -82,8 +102,62 @@ export class AppDefinition {
         }
       }
 
-      if (root === 'settings' && sub && change.path.length === 2) {
-        def.settingsMap.set(sub, change.data);
+      // Settings: depth 2 = full section, depth 3+ = nested key within section
+      if (root === 'settings' && sub) {
+        if (change.path.length === 2) {
+          def.settingsMap.set(sub, change.data);
+        } else {
+          // Build nested settings from granular changes
+          // e.g. ['settings', 'client_safe', 'plugins', 'id'] -> settingsMap['client_safe'].plugins.id = data
+          if (!def.settingsMap.has(sub)) {
+            def.settingsMap.set(sub, {});
+          }
+          const section = def.settingsMap.get(sub) as Record<string, unknown>;
+          const keys = change.path.slice(2);
+          let target: Record<string, unknown> = section;
+          for (let i = 0; i < keys.length - 1; i++) {
+            if (!target[keys[i]] || typeof target[keys[i]] !== 'object') {
+              target[keys[i]] = {};
+            }
+            target = target[keys[i]] as Record<string, unknown>;
+          }
+          target[keys[keys.length - 1]] = change.data;
+          def.settingsMap.set(sub, section);
+        }
+      }
+
+      // API connectors: api/<connectorKey> at depth 2, or api/<key>/<subkey> at depth 3+
+      if (root === 'api' && sub) {
+        if (change.path.length === 2) {
+          // Full connector object
+          const connMap = new Map<string, unknown>();
+          const obj = change.data as Record<string, unknown>;
+          for (const [k, v] of Object.entries(obj)) {
+            connMap.set(k, v);
+          }
+          def.apiConnectors.set(sub, connMap);
+        } else if (change.path.length >= 3) {
+          // Incremental sub-path update
+          if (!def.apiConnectors.has(sub)) {
+            def.apiConnectors.set(sub, new Map());
+          }
+          const connMap = def.apiConnectors.get(sub)!;
+          const subKey = change.path.slice(2).join('.');
+          connMap.set(subKey, change.data);
+        }
+      }
+
+      // Styles
+      if (root === 'styles' && sub && change.path.length === 2) {
+        def.stylesMap.set(sub, change.data);
+      }
+
+      // Reusable element index
+      if (root === '_index' && sub === 'custom_name_to_id' && change.path.length === 2) {
+        const map = change.data as Record<string, string>;
+        for (const [name, id] of Object.entries(map)) {
+          def.reusableElementIndex.set(name, id);
+        }
       }
     }
 
@@ -183,6 +257,63 @@ export class AppDefinition {
     return Object.fromEntries(this.settingsMap);
   }
 
+  getApiConnectors(): ApiConnectorDef[] {
+    const result: ApiConnectorDef[] = [];
+    for (const [key, connMap] of this.apiConnectors) {
+      const raw = Object.fromEntries(connMap);
+      // Name comes from %p.wf_name (incremental) or %p.wf_name inside %p object
+      const props = raw['%p'] as Record<string, unknown> | undefined;
+      const incrName = raw['%p.wf_name'] as string | undefined;
+      const name = incrName || props?.wf_name as string || (raw['%d'] as string) || key;
+      const calls: Record<string, unknown> = {};
+      for (const [k, v] of connMap) {
+        if (k === 'actions' && typeof v === 'object' && v !== null) {
+          Object.assign(calls, v as Record<string, unknown>);
+        }
+      }
+      result.push({ key, name, calls, raw });
+    }
+    return result;
+  }
+
+  getStyles(): StyleDef[] {
+    const result: StyleDef[] = [];
+    for (const [key, raw] of this.stylesMap) {
+      const obj = raw as Record<string, unknown>;
+      result.push({
+        key,
+        name: (obj['%d'] as string) || (obj['name'] as string) || key,
+        elementType: (obj['%type'] as string) || (obj['element_type'] as string) || 'unknown',
+        properties: Object.fromEntries(
+          Object.entries(obj).filter(([k]) => !k.startsWith('%') && k !== 'name' && k !== 'element_type'),
+        ),
+        raw,
+      });
+    }
+    return result;
+  }
+
+  getReusableElementNames(): string[] {
+    return [...this.reusableElementIndex.keys()];
+  }
+
+  getReusableElementIndex(): Map<string, string> {
+    return new Map(this.reusableElementIndex);
+  }
+
+  /**
+   * Merge reusable element index loaded directly via EditorClient.loadPaths().
+   */
+  mergeReusableElementIndex(nameToId: Record<string, string> | null): void {
+    if (nameToId) {
+      for (const [name, id] of Object.entries(nameToId)) {
+        if (!this.reusableElementIndex.has(name)) {
+          this.reusableElementIndex.set(name, id);
+        }
+      }
+    }
+  }
+
   getSummary(): AppSummary {
     const types = this.getDataTypes();
     const sets = this.getOptionSets();
@@ -191,6 +322,8 @@ export class AppDefinition {
       dataTypeCount: types.length,
       optionSetCount: sets.length,
       pageCount: pages.length,
+      apiConnectorCount: this.apiConnectors.size,
+      reusableElementCount: this.reusableElementIndex.size,
       dataTypeNames: types.map((t) => t.name),
       optionSetNames: sets.map((s) => s.name),
       pageNames: pages,

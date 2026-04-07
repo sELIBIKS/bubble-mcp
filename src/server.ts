@@ -12,6 +12,11 @@ import { createPageTool } from './tools/core/page.js';
 import { createPageElementsTool } from './tools/core/page-elements.js';
 import { createPageWorkflowsTool } from './tools/core/page-workflows.js';
 import { createDataTypeTool } from './tools/core/data-type.js';
+import { createApiConnectorsTool } from './tools/core/api-connectors.js';
+import { createStylesTool } from './tools/core/styles.js';
+import { createAppSettingsTool } from './tools/core/app-settings.js';
+import { createReusableElementsTool } from './tools/core/reusable-elements.js';
+import { createAppMapTool } from './tools/core/app-map.js';
 import type { BubbleConfig, ToolDefinition, SeedTracker } from './types.js';
 import { createSchemaTool } from './tools/core/schema.js';
 import { createSearchTool } from './tools/core/search.js';
@@ -188,5 +193,10 @@ function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
     createPageElementsTool(editorClient),
     createPageWorkflowsTool(editorClient),
     createDataTypeTool(editorClient),
+    createApiConnectorsTool(editorClient),
+    createStylesTool(editorClient),
+    createAppSettingsTool(editorClient),
+    createReusableElementsTool(editorClient),
+    createAppMapTool(editorClient),
   ];
 }

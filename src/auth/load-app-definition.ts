@@ -12,6 +12,7 @@ export async function loadAppDefinition(editorClient: EditorClient): Promise<App
     editorClient.loadPaths([
       ['_index', 'page_name_to_id'],
       ['_index', 'page_name_to_path'],
+      ['_index', 'custom_name_to_id'],
     ]),
   ]);
 
@@ -19,7 +20,9 @@ export async function loadAppDefinition(editorClient: EditorClient): Promise<App
 
   const pageNameToId = indexResult.data[0]?.data as Record<string, string> | null;
   const pageNameToPath = indexResult.data[1]?.data as Record<string, string> | null;
+  const customNameToId = indexResult.data[2]?.data as Record<string, string> | null;
   def.mergePageIndexes(pageNameToId, pageNameToPath);
+  def.mergeReusableElementIndex(customNameToId);
 
   return def;
 }
