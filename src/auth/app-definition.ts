@@ -167,19 +167,22 @@ export class AppDefinition {
   getDataTypes(): DataTypeDef[] {
     const result: DataTypeDef[] = [];
     for (const [key, raw] of this.userTypes) {
+      if (raw === null || raw === undefined) continue;
       const obj = raw as Record<string, unknown>;
       const deepFieldMap = this.deepFieldStore.get(key);
       const deepFields: DeepFieldDef[] | undefined = deepFieldMap
-        ? [...deepFieldMap.entries()].map(([fKey, fRaw]) => {
-            const fObj = fRaw as Record<string, unknown>;
-            return {
-              key: fKey,
-              name: (fObj['%d'] as string) || fKey,
-              fieldType: (fObj['%t'] as string) || 'unknown',
-              isList: (fObj['%o'] as boolean) || false,
-              raw: fRaw,
-            };
-          })
+        ? [...deepFieldMap.entries()]
+            .filter(([, fRaw]) => fRaw !== null && fRaw !== undefined)
+            .map(([fKey, fRaw]) => {
+              const fObj = fRaw as Record<string, unknown>;
+              return {
+                key: fKey,
+                name: (fObj['%d'] as string) || fKey,
+                fieldType: (fObj['%t'] as string) || 'unknown',
+                isList: (fObj['%o'] as boolean) || false,
+                raw: fRaw,
+              };
+            })
         : undefined;
 
       result.push({
@@ -198,6 +201,7 @@ export class AppDefinition {
   getOptionSets(): OptionSetDef[] {
     const result: OptionSetDef[] = [];
     for (const [key, raw] of this.optionSets) {
+      if (raw === null || raw === undefined) continue;
       const obj = raw as Record<string, unknown>;
       result.push({
         key,

@@ -72,8 +72,10 @@ export class EditorClient {
   }
 
   async getChanges(since: number = 0): Promise<EditorChange[]> {
+    // Use a unique reader session ID so we see our own writes in the changes stream
+    const readerId = `bubble-mcp-reader-${Date.now()}`;
     return this.get<EditorChange[]>(
-      `/appeditor/changes/${this.appId}/${this.version}/${since}/${this.sessionId}`,
+      `/appeditor/changes/${this.appId}/${this.version}/${since}/${readerId}`,
     );
   }
 
