@@ -10,6 +10,11 @@ export interface BubbleConfig {
   rateLimit: number;
 }
 
+export interface EditorConfig {
+  appId: string;
+  version: 'test' | 'live';
+  cookieHeader: string;
+}
 
 export interface BubbleRecord {
   _id: string;

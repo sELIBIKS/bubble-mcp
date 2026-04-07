@@ -3,6 +3,9 @@ import { BubbleClient } from './bubble-client.js';
 import { RateLimiter } from './middleware/rate-limiter.js';
 import { filterToolsByMode } from './middleware/mode-gate.js';
 import { handleToolError } from './middleware/error-handler.js';
+import { loadEditorConfig } from './config.js';
+import { EditorClient } from './auth/editor-client.js';
+import { createEditorStatusTool } from './tools/core/editor-status.js';
 import type { BubbleConfig, ToolDefinition, SeedTracker } from './types.js';
 import { createSchemaTool } from './tools/core/schema.js';
 import { createSearchTool } from './tools/core/search.js';
@@ -43,6 +46,13 @@ export function createServer(config: BubbleConfig): {
   });
 
   const client = new BubbleClient(config);
+
+  // Optional editor client (requires browser auth)
+  const editorConfig = loadEditorConfig(config);
+  const editorClient = editorConfig
+    ? new EditorClient(editorConfig.appId, editorConfig.version, editorConfig.cookieHeader)
+    : null;
+
   const rateLimiter = new RateLimiter(config.rateLimit);
   const seedTracker: SeedTracker = {
     seededIds: new Map(),
@@ -62,6 +72,7 @@ export function createServer(config: BubbleConfig): {
     ...getCoreTools(client, config),
     ...getCompoundTools(client, config),
     ...getDeveloperTools(client, config, seedTracker),
+    ...(editorClient ? getEditorTools(editorClient) : []),
   ];
 
   // Filter by server mode
@@ -106,6 +117,11 @@ export function createServer(config: BubbleConfig): {
 
   console.error(`[bubble-mcp] Started in ${config.mode} mode (${config.environment} environment)`);
   console.error(`[bubble-mcp] ${allowedTools.length} tools registered`);
+  if (editorClient) {
+    console.error(`[bubble-mcp] Editor session loaded for app: ${editorConfig!.appId}`);
+  } else {
+    console.error('[bubble-mcp] No editor session found (run: bubble-mcp auth login <app-id>)');
+  }
 
   return { server, client };
 }
@@ -154,5 +170,11 @@ function getDeveloperTools(
     createOptionSetAuditTool(client),
     createSeedDataTool(client, seedTracker),
     createCleanupTestDataTool(client, seedTracker),
+  ];
+}
+
+function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
+  return [
+    createEditorStatusTool(editorClient),
   ];
 }

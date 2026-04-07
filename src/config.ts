@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from 'node:fs';
-import type { BubbleConfig, ServerMode, Environment } from './types.js';
+import { createSessionManager } from './auth/session-manager.js';
+import type { BubbleConfig, ServerMode, Environment, EditorConfig } from './types.js';
 
 const VALID_MODES: ServerMode[] = ['read-only', 'read-write', 'admin'];
 const VALID_ENVIRONMENTS: Environment[] = ['development', 'live'];
@@ -33,6 +34,26 @@ function loadFromEnv(): BubbleConfig {
     process.env.BUBBLE_ENVIRONMENT,
     process.env.BUBBLE_RATE_LIMIT ? Number(process.env.BUBBLE_RATE_LIMIT) : undefined,
   );
+}
+
+export function loadEditorConfig(config: BubbleConfig): EditorConfig | null {
+  const appId = extractAppId(config.appUrl);
+  if (!appId) return null;
+
+  const mgr = createSessionManager();
+  const cookieHeader = mgr.getCookieHeader(appId);
+  if (!cookieHeader) return null;
+
+  return {
+    appId,
+    version: config.environment === 'development' ? 'test' : 'live',
+    cookieHeader,
+  };
+}
+
+function extractAppId(appUrl: string): string | null {
+  const match = appUrl.match(/https?:\/\/([^.]+)\.bubbleapps\.io/);
+  return match?.[1] ?? null;
 }
 
 function buildConfig(
