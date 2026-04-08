@@ -16,7 +16,12 @@ const baseChanges = [
   {
     last_change_date: 1, last_change: 1, action: 'write',
     path: ['option_sets', 'status'],
-    data: { '%d': 'Status', options: ['active', 'inactive'] },
+    data: { '%d': 'Status', creation_source: 'editor' },
+  },
+  {
+    last_change_date: 1, last_change: 1, action: 'write',
+    path: ['option_sets', 'status', 'values', 'active'],
+    data: { sort_factor: 1, '%d': 'active' },
   },
 ];
 
@@ -50,26 +55,37 @@ describe('bubble_update_option_set', () => {
 
     expect(data.updated.name).toBe('StatusType');
     expect(data.updated.key).toBe('status');
-    expect(mockWrite).toHaveBeenCalledWith([
-      {
-        body: { '%d': 'StatusType', options: ['active', 'inactive'] },
-        pathArray: ['option_sets', 'status'],
-      },
-    ]);
+    expect(mockWrite).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          body: 'StatusType',
+          pathArray: ['option_sets', 'status', '%d'],
+        }),
+      ]),
+    );
   });
 
-  it('updates option values', async () => {
+  it('adds new options', async () => {
     const tool = createUpdateOptionSetTool(mockClient as any);
-    const result = await tool.handler({ name: 'Status', options: ['active', 'inactive', 'pending'] });
+    const result = await tool.handler({ name: 'Status', add_options: ['pending', 'archived'] });
     const data = JSON.parse(result.content[0].text);
 
-    expect(data.updated.optionCount).toBe(3);
-    expect(mockWrite).toHaveBeenCalledWith([
-      {
-        body: { '%d': 'Status', options: ['active', 'inactive', 'pending'] },
-        pathArray: ['option_sets', 'status'],
-      },
-    ]);
+    expect(data.updated.name).toBe('Status');
+    expect(mockWrite).toHaveBeenCalledTimes(1);
+    const changes = mockWrite.mock.calls[0][0];
+    expect(changes).toHaveLength(2);
+    expect(changes[0].body['%d']).toBe('pending');
+    expect(changes[0].pathArray[2]).toBe('values');
+    expect(changes[1].body['%d']).toBe('archived');
+  });
+
+  it('returns error when no changes specified', async () => {
+    const tool = createUpdateOptionSetTool(mockClient as any);
+    const result = await tool.handler({ name: 'Status' });
+
+    expect(result.isError).toBe(true);
+    const data = JSON.parse(result.content[0].text);
+    expect(data.error).toContain('No changes');
   });
 
   it('returns error when not found', async () => {

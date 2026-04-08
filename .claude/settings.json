@@ -102,7 +102,9 @@
       "Bash(grep -oE '\\\\.set\\\\\\([^\\)]{0,60}\\\\\\)|\\\\.write\\\\\\([^\\)]{0,60}\\\\\\)|\\\\.delete\\\\\\(\\\\\\)|\\\\.clear\\\\\\(\\\\\\)' /tmp/worker.js)",
       "Bash(grep -oE '.{0,150}add_change.{0,150}' /tmp/worker.js)",
       "Bash(grep -oE '.{0,200}add_change.{0,200}' /tmp/worker.js)",
-      "Read(//c/Users/tobii/AppData/Local/Temp/**)"
+      "Read(//c/Users/tobii/AppData/Local/Temp/**)",
+      "Bash(ls -la src/tools/core/write-*.ts)",
+      "Bash(ls -la tests/tools/core/write-*.test.ts)"
     ],
     "additionalDirectories": [
       "f:\\selibiks_claude\\bubble-mcp\\.claude",

@@ -16,7 +16,7 @@ const baseChanges = [
   {
     last_change_date: 1, last_change: 1, action: 'write',
     path: ['option_sets', 'status'],
-    data: { '%d': 'Status', options: ['active', 'inactive'] },
+    data: { '%d': 'Status', creation_source: 'editor' },
   },
 ];
 
@@ -43,7 +43,7 @@ describe('bubble_create_option_set', () => {
     expect(tool.mode).toBe('read-write');
   });
 
-  it('creates an option set', async () => {
+  it('creates an option set with no options', async () => {
     const tool = createCreateOptionSetTool(mockClient as any);
     const result = await tool.handler({ name: 'Priority' });
     const data = JSON.parse(result.content[0].text);
@@ -51,26 +51,63 @@ describe('bubble_create_option_set', () => {
     expect(data.created.name).toBe('Priority');
     expect(data.created.key).toBe('priority');
     expect(data.created.optionCount).toBe(0);
-    expect(mockWrite).toHaveBeenCalledWith([
-      {
-        body: { '%d': 'Priority', options: [] },
-        pathArray: ['option_sets', 'priority'],
-      },
-    ]);
+    // Single write with just the option set definition
+    expect(mockWrite).toHaveBeenCalledTimes(1);
+    expect(mockWrite).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          body: { '%d': 'Priority', creation_source: 'editor' },
+          pathArray: ['option_sets', 'priority'],
+        }),
+      ]),
+    );
   });
 
-  it('creates with initial options', async () => {
+  it('creates with options using two-phase write', async () => {
     const tool = createCreateOptionSetTool(mockClient as any);
-    const result = await tool.handler({ name: 'Priority', options: ['High', 'Medium', 'Low'] });
+    const result = await tool.handler({
+      name: 'Priority',
+      options: ['High', 'Medium', 'Low'],
+    });
     const data = JSON.parse(result.content[0].text);
 
     expect(data.created.optionCount).toBe(3);
-    expect(mockWrite).toHaveBeenCalledWith([
-      {
-        body: { '%d': 'Priority', options: ['High', 'Medium', 'Low'] },
-        pathArray: ['option_sets', 'priority'],
-      },
-    ]);
+    // Phase 1: structure (option set + 3 values)
+    expect(mockWrite).toHaveBeenCalledTimes(1);
+    const structureCall = mockWrite.mock.calls[0][0];
+    expect(structureCall).toHaveLength(4); // 1 set + 3 values
+    expect(structureCall[0].body['%d']).toBe('Priority');
+    expect(structureCall[1].body['%d']).toBe('High');
+    expect(structureCall[1].body.sort_factor).toBe(1);
+    expect(structureCall[2].body['%d']).toBe('Medium');
+    expect(structureCall[3].body['%d']).toBe('Low');
+  });
+
+  it('creates with attributes using two-phase write', async () => {
+    const tool = createCreateOptionSetTool(mockClient as any);
+    const result = await tool.handler({
+      name: 'Priority',
+      attributes: [{ name: 'color_code', type: 'text' }],
+      options: [
+        { value: 'High', color_code: 'red' },
+        { value: 'Low', color_code: 'green' },
+      ],
+    });
+    const data = JSON.parse(result.content[0].text);
+
+    expect(data.created.attributeCount).toBe(1);
+    expect(data.created.optionCount).toBe(2);
+    // Two write calls: structure then attribute values
+    expect(mockWrite).toHaveBeenCalledTimes(2);
+    // Phase 1: set + attr def + 2 values
+    const phase1 = mockWrite.mock.calls[0][0];
+    expect(phase1).toHaveLength(4);
+    // Phase 2: attribute values
+    const phase2 = mockWrite.mock.calls[1][0];
+    expect(phase2).toHaveLength(2);
+    expect(phase2[0].body).toBe('red');
+    expect(phase2[0].pathArray).toContain('color_code');
+    expect(phase2[1].body).toBe('green');
   });
 
   it('returns error if already exists', async () => {
