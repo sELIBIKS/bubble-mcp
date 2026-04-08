@@ -32,6 +32,8 @@ import { createSetDataSourceTool } from './tools/core/write-set-data-source.js';
 import { createCreateApiWorkflowTool } from './tools/core/write-create-api-workflow.js';
 import { createUpdateApiWorkflowTool } from './tools/core/write-update-api-workflow.js';
 import { createAddConditionTool } from './tools/core/write-add-condition.js';
+import { createCreateWorkflowTool } from './tools/core/write-create-workflow.js';
+import { createCreatePrivacyRuleTool } from './tools/core/write-create-privacy-rule.js';
 import type { BubbleConfig, ToolDefinition, SeedTracker } from './types.js';
 import { createSchemaTool } from './tools/core/schema.js';
 import { createSearchTool } from './tools/core/search.js';
@@ -229,5 +231,7 @@ function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
     createCreateApiWorkflowTool(editorClient),
     createUpdateApiWorkflowTool(editorClient),
     createAddConditionTool(editorClient),
+    createCreateWorkflowTool(editorClient),
+    createCreatePrivacyRuleTool(editorClient),
   ];
 }
