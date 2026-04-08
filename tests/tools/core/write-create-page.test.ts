@@ -47,7 +47,7 @@ describe('bubble_create_page', () => {
     expect(tool.mode).toBe('read-write');
   });
 
-  it('creates a page with 3 changes', async () => {
+  it('creates a page with correct structure', async () => {
     const tool = createCreatePageTool(mockClient as any);
     const result = await tool.handler({ page_name: 'dashboard' });
     const data = JSON.parse(result.content[0].text);
@@ -59,20 +59,17 @@ describe('bubble_create_page', () => {
 
     expect(mockWrite).toHaveBeenCalledTimes(1);
     const changes = mockWrite.mock.calls[0][0];
-    expect(changes).toHaveLength(3);
+    expect(changes).toHaveLength(1);
 
-    // Change 1: page_name_to_id index
-    expect(changes[0].pathArray).toEqual(['_index', 'page_name_to_id', 'dashboard']);
-    expect(typeof changes[0].body).toBe('string');
-
-    // Change 2: page_name_to_path index
-    expect(changes[1].pathArray).toEqual(['_index', 'page_name_to_path', 'dashboard']);
-    expect(changes[1].body).toMatch(/^%p3\./);
-
-    // Change 3: page node
-    expect(changes[2].pathArray[0]).toBe('%p3');
-    expect(typeof changes[2].pathArray[1]).toBe('string');
-    expect(changes[2].body).toEqual({});
+    // Single write to %p3 with full page structure
+    expect(changes[0].pathArray[0]).toBe('%p3');
+    const body = changes[0].body;
+    expect(body['%x']).toBe('Page');
+    expect(body['%nm']).toBe('dashboard');
+    expect(body.id).toBeDefined();
+    expect(body['%p']['%w']).toBe(1080);
+    expect(body['%p']['%h']).toBe(767);
+    expect(body['%p'].element_version).toBe(5);
   });
 
   it('returns error if page already exists', async () => {
@@ -92,8 +89,7 @@ describe('bubble_create_page', () => {
     expect(result.isError).toBeUndefined();
     expect(data.created.name).toBe('user_profile');
 
-    const changes = mockWrite.mock.calls[0][0];
-    expect(changes[0].pathArray[2]).toBe('user_profile');
-    expect(changes[1].pathArray[2]).toBe('user_profile');
+    const body = mockWrite.mock.calls[0][0][0].body;
+    expect(body['%nm']).toBe('user_profile');
   });
 });

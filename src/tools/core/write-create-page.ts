@@ -50,22 +50,25 @@ export function createCreatePageTool(editorClient: EditorClient): ToolDefinition
       const pageId = generateId();
       const pathId = generateId();
 
-      const changes: Array<{ body: unknown; pathArray: string[] }> = [
+      const writeResult = await editorClient.write([
         {
-          body: pageId,
-          pathArray: ['_index', 'page_name_to_id', pageName],
-        },
-        {
-          body: `%p3.${pathId}`,
-          pathArray: ['_index', 'page_name_to_path', pageName],
-        },
-        {
-          body: {},
+          body: {
+            '%x': 'Page',
+            '%p': {
+              new_responsive: true,
+              fixed_width: true,
+              '%w': 1080,
+              '%h': 767,
+              min_width_px: 0,
+              responsive_version: 1,
+              element_version: 5,
+            },
+            id: pageId,
+            '%nm': pageName,
+          },
           pathArray: ['%p3', pathId],
         },
-      ];
-
-      const writeResult = await editorClient.write(changes);
+      ]);
 
       return successResult({
         created: {
