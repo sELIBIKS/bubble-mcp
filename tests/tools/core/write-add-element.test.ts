@@ -38,7 +38,7 @@ describe('bubble_add_element', () => {
     expect(tool.mode).toBe('read-write');
   });
 
-  it('adds a top-level element with 4 changes', async () => {
+  it('adds a top-level element as single object write', async () => {
     const tool = createAddElementTool(mockClient as any);
     const result = await tool.handler({
       page_name: 'dashboard',
@@ -51,19 +51,24 @@ describe('bubble_add_element', () => {
     expect(data.created.pageName).toBe('dashboard');
     expect(data.created.elementType).toBe('Button');
     expect(data.created.elementName).toBe('Submit Button');
-    expect(data.created.elementId).toHaveLength(5);
 
     const writeCall = mockWrite.mock.calls[0][0];
-    expect(writeCall).toHaveLength(4);
+    expect(writeCall).toHaveLength(1);
 
-    const elementId = data.created.elementId;
-    expect(writeCall[0]).toEqual({ body: 'Submit Button', pathArray: ['%p3', 'def', '%el', elementId, '%nm'] });
-    expect(writeCall[1]).toEqual({ body: 'Button', pathArray: ['%p3', 'def', '%el', elementId, '%x'] });
-    expect(writeCall[2]).toEqual({ body: elementId, pathArray: ['%p3', 'def', '%el', elementId, 'id'] });
-    expect(writeCall[3]).toEqual({ body: null, pathArray: ['%p3', 'def', '%el', elementId, 'parent'] });
+    const body = writeCall[0].body;
+    expect(body['%x']).toBe('Button');
+    expect(body['%dn']).toBe('Submit Button');
+    expect(body.id).toBeDefined();
+    expect(body['%p']['%w']).toBe(150); // Button width
+    expect(body['%p']['%h']).toBe(44);  // Button height
+    expect(body.parent).toBeUndefined();
+
+    expect(writeCall[0].pathArray[0]).toBe('%p3');
+    expect(writeCall[0].pathArray[1]).toBe('def');
+    expect(writeCall[0].pathArray[2]).toBe('%el');
   });
 
-  it('adds a nested element with parent_element_id', async () => {
+  it('adds a nested element with parent', async () => {
     const tool = createAddElementTool(mockClient as any);
     const result = await tool.handler({
       page_name: 'dashboard',
@@ -73,13 +78,8 @@ describe('bubble_add_element', () => {
     });
 
     expect(result.isError).toBeUndefined();
-    const data = JSON.parse(result.content[0].text);
-
-    const writeCall = mockWrite.mock.calls[0][0];
-    expect(writeCall[3]).toEqual({
-      body: 'parentXYZ',
-      pathArray: ['%p3', 'def', '%el', data.created.elementId, 'parent'],
-    });
+    const body = mockWrite.mock.calls[0][0][0].body;
+    expect(body.parent).toBe('parentXYZ');
   });
 
   it('returns error when page not found', async () => {

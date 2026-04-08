@@ -63,20 +63,41 @@ export function createAddElementTool(editorClient: EditorClient): ToolDefinition
       const pathParts = pagePath.split('.');
       const pathId = pathParts[1];
 
+      const elementKey = generateId();
       const elementId = generateId();
 
-      const changes = [
-        { body: elementName, pathArray: ['%p3', pathId, '%el', elementId, '%nm'] },
-        { body: elementType, pathArray: ['%p3', pathId, '%el', elementId, '%x'] },
-        { body: elementId, pathArray: ['%p3', pathId, '%el', elementId, 'id'] },
-        { body: parentElementId, pathArray: ['%p3', pathId, '%el', elementId, 'parent'] },
-      ];
+      // Elements are written as a single object at depth 4: ['%p3', pathId, '%el', elementKey]
+      // Format matches Bubble editor: %x (type), %dn (display name), %p (properties), id, %s1 (style)
+      const elementBody: Record<string, unknown> = {
+        '%x': elementType,
+        '%dn': elementName,
+        id: elementId,
+        '%p': {
+          '%t': 100,   // top position
+          '%l': 100,   // left position
+          '%w': elementType === 'Button' ? 150 : elementType === 'Icon' ? 30 : 200,
+          '%h': elementType === 'Button' ? 44 : elementType === 'Icon' ? 30 : 40,
+          '%z': 2,
+          collapse_when_hidden: true,
+          fit_width: true,
+          single_width: false,
+          min_width_css: '0px',
+          min_height_css: '0px',
+        },
+      };
 
-      const writeResult = await editorClient.write(changes);
+      if (parentElementId) {
+        elementBody.parent = parentElementId;
+      }
+
+      const writeResult = await editorClient.write([
+        { body: elementBody, pathArray: ['%p3', pathId, '%el', elementKey] },
+      ]);
 
       return successResult({
         created: {
           pageName,
+          elementKey,
           elementId,
           elementType,
           elementName,

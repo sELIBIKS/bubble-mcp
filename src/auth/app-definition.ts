@@ -102,6 +102,28 @@ export class AppDefinition {
         }
       }
 
+      // Pages from %p3 entries (supplements the _index which may not include newly created pages)
+      if (root === '%p3' && sub && change.path.length === 2) {
+        if (change.data === null || change.data === undefined) {
+          // Page deleted — remove from maps if it was added from an earlier %p3 entry
+          for (const [name, path] of def.pagePaths) {
+            if (path === `%p3.${sub}`) {
+              def.pages.delete(name);
+              def.pagePaths.delete(name);
+              break;
+            }
+          }
+        } else {
+          const obj = change.data as Record<string, unknown>;
+          const pageName = obj['%nm'] as string | undefined;
+          const pageId = obj['id'] as string | undefined;
+          if (pageName && obj['%x'] === 'Page') {
+            def.pages.set(pageName, pageId || sub);
+            def.pagePaths.set(pageName, `%p3.${sub}`);
+          }
+        }
+      }
+
       // Settings: depth 2 = full section, depth 3+ = nested key within section
       if (root === 'settings' && sub) {
         if (change.path.length === 2) {
@@ -128,7 +150,7 @@ export class AppDefinition {
 
       // API connectors: api/<connectorKey> at depth 2, or api/<key>/<subkey> at depth 3+
       if (root === 'api' && sub) {
-        if (change.path.length === 2) {
+        if (change.path.length === 2 && change.data !== null && change.data !== undefined) {
           // Full connector object
           const connMap = new Map<string, unknown>();
           const obj = change.data as Record<string, unknown>;
