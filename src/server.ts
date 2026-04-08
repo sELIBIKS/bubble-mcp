@@ -28,8 +28,10 @@ import { createDeleteOptionSetTool } from './tools/core/write-delete-option-set.
 import { createCreatePageTool } from './tools/core/write-create-page.js';
 import { createAddElementTool } from './tools/core/write-add-element.js';
 import { createUpdateElementTool } from './tools/core/write-update-element.js';
+import { createSetDataSourceTool } from './tools/core/write-set-data-source.js';
 import { createCreateApiWorkflowTool } from './tools/core/write-create-api-workflow.js';
 import { createUpdateApiWorkflowTool } from './tools/core/write-update-api-workflow.js';
+import { createAddConditionTool } from './tools/core/write-add-condition.js';
 import type { BubbleConfig, ToolDefinition, SeedTracker } from './types.js';
 import { createSchemaTool } from './tools/core/schema.js';
 import { createSearchTool } from './tools/core/search.js';
@@ -223,7 +225,9 @@ function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
     createCreatePageTool(editorClient),
     createAddElementTool(editorClient),
     createUpdateElementTool(editorClient),
+    createSetDataSourceTool(editorClient),
     createCreateApiWorkflowTool(editorClient),
     createUpdateApiWorkflowTool(editorClient),
+    createAddConditionTool(editorClient),
   ];
 }
