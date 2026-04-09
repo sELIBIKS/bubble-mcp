@@ -56,7 +56,7 @@ async function loadPlaywright() {
   }
 }
 
-export async function browserLogin(appId: string): Promise<void> {
+export async function browserLogin(appId: string, branch?: string): Promise<void> {
   const chromium = await loadPlaywright();
 
   console.log(`Opening browser for Bubble login...`);
@@ -85,8 +85,73 @@ export async function browserLogin(appId: string): Promise<void> {
 
     // User has navigated away from login — they're authenticated
     // Now go to the editor to capture app-specific session state
-    const editorUrl = `https://bubble.io/page?id=${appId}&tab=Design&name=index`;
-    console.log(`\nLogin successful! Opening editor for "${appId}"...`);
+    let editorUrl = `https://bubble.io/page?id=${appId}&tab=Design&name=index`;
+    let resolvedVersion: string | undefined;
+
+    if (branch) {
+      // Detect branch version ID by loading editor and checking available branches
+      console.log(`\nLogin successful! Detecting branch "${branch}" for "${appId}"...`);
+      await page.goto(editorUrl, { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(5000);
+
+      // Try to fetch branches from the editor API
+      try {
+        const branchesResponse = await page.evaluate(async (aid: string) => {
+          const res = await fetch(`/api/1.1/meta/branches?app_id=${aid}`, { credentials: 'include' });
+          if (res.ok) return res.json();
+          // Try alternative endpoint
+          const res2 = await fetch(`/appeditor/get_branches/${aid}`, { credentials: 'include' });
+          if (res2.ok) return res2.json();
+          return null;
+        }, appId);
+
+        if (branchesResponse) {
+          // Look for matching branch
+          const branches = Array.isArray(branchesResponse) ? branchesResponse : (branchesResponse as Record<string, unknown>).branches;
+          if (Array.isArray(branches)) {
+            const match = branches.find((b: Record<string, unknown>) =>
+              (b.name as string)?.toLowerCase() === branch.toLowerCase() ||
+              (b.branch_name as string)?.toLowerCase() === branch.toLowerCase()
+            );
+            if (match) {
+              resolvedVersion = (match.version as string) || (match.id as string);
+              console.log(`Found branch "${branch}" → version "${resolvedVersion}"`);
+            }
+          }
+        }
+      } catch {
+        // Branch detection via API failed — try URL-based approach
+      }
+
+      // If API didn't work, extract from URL after navigating to branch
+      if (!resolvedVersion) {
+        // Navigate to the branch URL pattern Bubble uses
+        const branchUrl = `https://bubble.io/page?id=${appId}&tab=Design&name=index`;
+        await page.goto(branchUrl, { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(3000);
+
+        // Check the current URL for a version parameter
+        const currentUrlObj = new URL(page.url());
+        const versionParam = currentUrlObj.searchParams.get('version');
+        if (versionParam && versionParam !== 'test' && versionParam !== 'live') {
+          resolvedVersion = versionParam;
+          console.log(`Detected branch version from URL: "${resolvedVersion}"`);
+        }
+      }
+
+      if (!resolvedVersion) {
+        console.warn(`Could not auto-detect branch "${branch}". You can manually provide the version ID.`);
+        console.warn(`Check the editor URL: ...&version=XXXXX — the version parameter is the branch ID.`);
+        console.warn(`Falling back to default "test" version.`);
+      }
+    } else {
+      console.log(`\nLogin successful! Opening editor for "${appId}"...`);
+    }
+
+    // Navigate to the correct editor URL with branch if resolved
+    if (resolvedVersion) {
+      editorUrl = `https://bubble.io/page?id=${appId}&tab=Design&name=index&version=${resolvedVersion}`;
+    }
     await page.goto(editorUrl, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(5000); // Let editor fully initialize
 
@@ -97,8 +162,9 @@ export async function browserLogin(appId: string): Promise<void> {
     if (validateSession(finalCookies)) {
       authenticated = true;
       const mgr = createSessionManager();
-      mgr.save(appId, finalCookies);
-      console.log(`Authenticated! ${finalCookies.length} cookies saved for app "${appId}".`);
+      mgr.save(appId, finalCookies, resolvedVersion);
+      const versionLabel = resolvedVersion ? ` (branch: ${resolvedVersion})` : '';
+      console.log(`Authenticated! ${finalCookies.length} cookies saved for app "${appId}"${versionLabel}.`);
       break;
     }
   }

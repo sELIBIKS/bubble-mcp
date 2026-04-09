@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 function getAppId(): string | null {
-  // 1. Explicit argument
-  const argId = process.argv[4] || process.argv[3];
-  if (argId && !argId.startsWith('-')) return argId;
+  // 1. Explicit argument (skip flags starting with -)
+  for (const arg of process.argv.slice(3)) {
+    if (!arg.startsWith('-') && !arg.startsWith('--')) return arg;
+  }
 
   // 2. Environment variable
   if (process.env.BUBBLE_APP_ID) return process.env.BUBBLE_APP_ID;
@@ -18,6 +19,15 @@ function getAppId(): string | null {
   return null;
 }
 
+function getFlag(name: string): string | undefined {
+  const idx = process.argv.indexOf(`--${name}`);
+  if (idx !== -1 && idx + 1 < process.argv.length) return process.argv[idx + 1];
+  // Also check --name=value format
+  const prefixed = process.argv.find(a => a.startsWith(`--${name}=`));
+  if (prefixed) return prefixed.split('=')[1];
+  return undefined;
+}
+
 const command = process.argv[2];
 
 if (command === 'auth' || command === 'setup') {
@@ -26,11 +36,13 @@ if (command === 'auth' || command === 'setup') {
     const { browserLogin } = await import('./auth/browser-login.js');
     const appId = getAppId();
     if (!appId) {
-      console.error('Usage: bubble-mcp setup <app-id>');
+      console.error('Usage: bubble-mcp setup <app-id> [--branch <branch-name>] [--version <version-id>]');
       console.error('  or set BUBBLE_APP_URL / BUBBLE_APP_ID environment variable');
       process.exit(1);
     }
-    await browserLogin(appId);
+    const branch = getFlag('branch');
+    const versionOverride = getFlag('version');
+    await browserLogin(appId, branch || versionOverride);
   } else if (subcommand === 'status') {
     const { checkStatus } = await import('./auth/session-manager.js');
     await checkStatus();

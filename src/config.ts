@@ -44,9 +44,13 @@ export function loadEditorConfig(config: BubbleConfig): EditorConfig | null {
   const cookieHeader = mgr.getCookieHeader(appId);
   if (!cookieHeader) return null;
 
+  // Use stored branch version if available, otherwise fall back to environment default
+  const storedVersion = mgr.getVersion(appId);
+  const defaultVersion = config.environment === 'development' ? 'test' : 'live';
+
   return {
     appId,
-    version: config.environment === 'development' ? 'test' : 'live',
+    version: storedVersion || defaultVersion,
     cookieHeader,
   };
 }

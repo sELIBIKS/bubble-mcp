@@ -12,7 +12,7 @@ export interface BubbleConfig {
 
 export interface EditorConfig {
   appId: string;
-  version: 'test' | 'live';
+  version: string; // 'test', 'live', or a branch ID (e.g. '634ss')
   cookieHeader: string;
 }
 

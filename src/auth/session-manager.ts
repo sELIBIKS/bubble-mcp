@@ -8,13 +8,24 @@ export interface StoredCookie {
   domain: string;
 }
 
+interface SessionEntry {
+  cookies: StoredCookie[];
+  version?: string; // branch ID or 'test'/'live'
+}
+
 interface SessionStore {
-  [appId: string]: StoredCookie[];
+  [appId: string]: StoredCookie[] | SessionEntry;
+}
+
+function normalizeEntry(raw: StoredCookie[] | SessionEntry): SessionEntry {
+  if (Array.isArray(raw)) return { cookies: raw };
+  return raw;
 }
 
 export interface SessionManager {
-  save(appId: string, cookies: StoredCookie[]): void;
+  save(appId: string, cookies: StoredCookie[], version?: string): void;
   load(appId: string): StoredCookie[] | null;
+  getVersion(appId: string): string | null;
   clear(appId: string): void;
   clearAll(): void;
   getCookieHeader(appId: string): string | null;
@@ -43,15 +54,24 @@ export function createSessionManager(dir: string = DEFAULT_DIR): SessionManager 
   }
 
   return {
-    save(appId, cookies) {
+    save(appId, cookies, version) {
       const store = readStore();
-      store[appId] = cookies;
+      store[appId] = { cookies, version };
       writeStore(store);
     },
 
     load(appId) {
       const store = readStore();
-      return store[appId] ?? null;
+      const raw = store[appId];
+      if (!raw) return null;
+      return normalizeEntry(raw).cookies;
+    },
+
+    getVersion(appId) {
+      const store = readStore();
+      const raw = store[appId];
+      if (!raw) return null;
+      return normalizeEntry(raw).version ?? null;
     },
 
     clear(appId) {
