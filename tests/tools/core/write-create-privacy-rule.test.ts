@@ -100,22 +100,13 @@ describe('bubble_create_privacy_rule', () => {
     });
 
     expect(result.isError).toBeUndefined();
-    const data = JSON.parse(result.content[0].text);
     const writeCall = mockWrite.mock.calls[0][0];
-    expect(writeCall).toHaveLength(2);
+    expect(writeCall).toHaveLength(1);
 
-    // Role creation
+    // Role body includes %c inline
     expect(writeCall[0].body['%d']).toBe('Owner only');
-
-    // Condition expression
-    expect(writeCall[1].pathArray).toEqual([
-      'user_types',
-      'typeABC',
-      'privacy_role',
-      data.created.roleKey,
-      '%c',
-    ]);
-    expect(writeCall[1].body['%x']).toBe('InjectedValue');
+    expect(writeCall[0].body['%c']).toBeDefined();
+    expect(writeCall[0].body['%c']['%x']).toBe('InjectedValue');
   });
 
   it('returns error when data type not found', async () => {

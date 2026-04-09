@@ -4,6 +4,7 @@ import type { EditorClient } from '../../auth/editor-client.js';
 import { loadAppDefinition } from '../../auth/load-app-definition.js';
 import { successResult } from '../../middleware/error-handler.js';
 import { buildExpression, buildComparison } from '../../shared/expression-builder.js';
+import { resolveElementKey } from '../../shared/resolve-element-key.js';
 
 /** Map human-readable property names to Bubble internal keys */
 const PROPERTY_MAP: Record<string, string> = {
@@ -112,21 +113,43 @@ export function createAddConditionTool(editorClient: EditorClient): ToolDefiniti
       }
 
       const pathId = pagePath.split('.')[1];
+
+      const resolved = await resolveElementKey(editorClient, pathId, elementId);
+      if (!resolved) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: `Element "${elementId}" not found on page "${pageName}"`,
+              }),
+            },
+          ],
+          isError: true,
+        };
+      }
+      const elKey = resolved.key;
+
       const propertyKey = PROPERTY_MAP[property] || property;
       const conditionExpr = parseCondition(condition);
 
+      // Two-phase write: init state slot first, then set %c and %p separately.
+      // Single-batch would cause the init's %c:null to overwrite the condition expression.
+      await editorClient.write([
+        {
+          body: { '%x': 'State', '%c': null, '%p': null },
+          pathArray: ['%p3', pathId, '%el', elKey, '%s', stateIndex],
+        },
+      ]);
+
       const writeResult = await editorClient.write([
         {
-          body: { [stateIndex]: { '%x': 'State', '%c': null, '%p': null } },
-          pathArray: ['%p3', pathId, '%el', elementId, '%s'],
-        },
-        {
           body: conditionExpr,
-          pathArray: ['%p3', pathId, '%el', elementId, '%s', stateIndex, '%c'],
+          pathArray: ['%p3', pathId, '%el', elKey, '%s', stateIndex, '%c'],
         },
         {
           body: value,
-          pathArray: ['%p3', pathId, '%el', elementId, '%s', stateIndex, '%p', propertyKey],
+          pathArray: ['%p3', pathId, '%el', elKey, '%s', stateIndex, '%p', propertyKey],
         },
       ]);
 

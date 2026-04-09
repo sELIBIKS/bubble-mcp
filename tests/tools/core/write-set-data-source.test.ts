@@ -1,4 +1,3 @@
-// tests/tools/core/write-set-data-source.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createSetDataSourceTool } from '../../../src/tools/core/write-set-data-source.js';
 
@@ -21,6 +20,7 @@ describe('bubble_set_data_source', () => {
     mockGetChanges.mockResolvedValue([
       { last_change_date: 1, last_change: 1, action: 'write', path: ['_index', 'page_name_to_id'], data: { dashboard: 'abc' } },
       { last_change_date: 1, last_change: 1, action: 'write', path: ['_index', 'page_name_to_path'], data: { dashboard: '%p3.def' } },
+      { last_change_date: 1, last_change: 1, action: 'write', path: ['%p3', 'def', '%el', 'keyText'], data: { '%x': 'Text', '%dn': 'My Text', id: 'elABC' } },
     ]);
     mockLoadPaths.mockResolvedValue({
       last_change: 1,
@@ -39,7 +39,7 @@ describe('bubble_set_data_source', () => {
     expect(tool.mode).toBe('read-write');
   });
 
-  it('sets a text expression binding', async () => {
+  it('sets a text expression binding using element key', async () => {
     const tool = createSetDataSourceTool(mockClient as any);
     const result = await tool.handler({
       page_name: 'dashboard',
@@ -48,12 +48,9 @@ describe('bubble_set_data_source', () => {
     });
 
     expect(result.isError).toBeUndefined();
-    const data = JSON.parse(result.content[0].text);
-    expect(data.created.elementId).toBe('elABC');
-
     const writeCall = mockWrite.mock.calls[0][0];
     expect(writeCall).toHaveLength(1);
-    expect(writeCall[0].pathArray).toEqual(['%p3', 'def', '%el', 'elABC', '%p', '%3']);
+    expect(writeCall[0].pathArray).toEqual(['%p3', 'def', '%el', 'keyText', '%p', '%3']);
     expect(writeCall[0].body['%x']).toBe('TextExpression');
     expect(writeCall[0].body['%e']['0']['%x']).toBe('CurrentUser');
     expect(writeCall[0].body['%e']['0']['%n']['%nm']).toBe('email');
@@ -71,7 +68,7 @@ describe('bubble_set_data_source', () => {
     expect(result.isError).toBeUndefined();
     const writeCall = mockWrite.mock.calls[0][0];
     expect(writeCall).toHaveLength(2);
-    expect(writeCall[1].pathArray).toEqual(['%p3', 'def', '%el', 'elABC', '%p', 'editor_preview_text']);
+    expect(writeCall[1].pathArray).toEqual(['%p3', 'def', '%el', 'keyText', '%p', 'editor_preview_text']);
     expect(writeCall[1].body).toBe('User Email');
   });
 
@@ -84,6 +81,20 @@ describe('bubble_set_data_source', () => {
     });
 
     expect(result.isError).toBe(true);
+    expect(mockWrite).not.toHaveBeenCalled();
+  });
+
+  it('returns error when element not found', async () => {
+    const tool = createSetDataSourceTool(mockClient as any);
+    const result = await tool.handler({
+      page_name: 'dashboard',
+      element_id: 'nonexistent',
+      expression: "Current User's email",
+    });
+
+    expect(result.isError).toBe(true);
+    const data = JSON.parse(result.content[0].text);
+    expect(data.error).toContain('not found');
     expect(mockWrite).not.toHaveBeenCalled();
   });
 

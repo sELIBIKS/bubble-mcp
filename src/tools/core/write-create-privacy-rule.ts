@@ -75,9 +75,11 @@ export function createCreatePrivacyRuleTool(editorClient: EditorClient): ToolDef
 
       const def = await loadAppDefinition(editorClient);
       const types = def.getDataTypes();
-      const matched = types.find(
+      // Use last match — when duplicate type names exist, the later entry is the active one
+      const matches = types.filter(
         (t) => t.name.toLowerCase() === dataTypeName.toLowerCase(),
       );
+      const matched = matches.length > 0 ? matches[matches.length - 1] : undefined;
 
       if (!matched) {
         const available = types.map((t) => t.name);
@@ -106,25 +108,21 @@ export function createCreatePrivacyRuleTool(editorClient: EditorClient): ToolDef
         create_api: permissions.create_api ?? false,
       };
 
-      const changes: Array<{ body: unknown; pathArray: string[] }> = [
-        {
-          body: {
-            '%d': ruleName,
-            permissions: resolvedPermissions,
-          },
-          pathArray: ['user_types', matched.key, 'privacy_role', roleKey],
-        },
-      ];
+      const roleBody: Record<string, unknown> = {
+        '%d': ruleName,
+        permissions: resolvedPermissions,
+      };
 
       if (condition) {
-        const conditionExpr = parsePrivacyCondition(condition);
-        changes.push({
-          body: conditionExpr,
-          pathArray: ['user_types', matched.key, 'privacy_role', roleKey, '%c'],
-        });
+        roleBody['%c'] = parsePrivacyCondition(condition);
       }
 
-      const writeResult = await editorClient.write(changes);
+      const writeResult = await editorClient.write([
+        {
+          body: roleBody,
+          pathArray: ['user_types', matched.key, 'privacy_role', roleKey],
+        },
+      ]);
 
       return successResult({
         created: {

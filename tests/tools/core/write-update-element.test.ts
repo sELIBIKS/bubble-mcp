@@ -20,6 +20,7 @@ describe('bubble_update_element', () => {
     mockGetChanges.mockResolvedValue([
       { last_change_date: 1, last_change: 1, action: 'write', path: ['_index', 'page_name_to_id'], data: { dashboard: 'abc' } },
       { last_change_date: 1, last_change: 1, action: 'write', path: ['_index', 'page_name_to_path'], data: { dashboard: '%p3.def' } },
+      { last_change_date: 1, last_change: 1, action: 'write', path: ['%p3', 'def', '%el', 'keyBtn'], data: { '%x': 'Button', '%dn': 'My Button', id: 'abcDE' } },
     ]);
     mockLoadPaths.mockResolvedValue({
       last_change: 1,
@@ -38,7 +39,7 @@ describe('bubble_update_element', () => {
     expect(tool.mode).toBe('read-write');
   });
 
-  it('updates element name', async () => {
+  it('updates element name using resolved key', async () => {
     const tool = createUpdateElementTool(mockClient as any);
     const result = await tool.handler({
       page_name: 'dashboard',
@@ -53,7 +54,7 @@ describe('bubble_update_element', () => {
     expect(data.updated.newName).toBe('Renamed Button');
 
     expect(mockWrite).toHaveBeenCalledWith([
-      { body: 'Renamed Button', pathArray: ['%p3', 'def', '%el', 'abcDE', '%nm'] },
+      { body: 'Renamed Button', pathArray: ['%p3', 'def', '%el', 'keyBtn', '%nm'] },
     ]);
   });
 
@@ -68,7 +69,20 @@ describe('bubble_update_element', () => {
     expect(result.isError).toBe(true);
     const data = JSON.parse(result.content[0].text);
     expect(data.error).toContain('Page "nonexistent" not found');
-    expect(data.hint).toContain('dashboard');
+    expect(mockWrite).not.toHaveBeenCalled();
+  });
+
+  it('returns error when element not found', async () => {
+    const tool = createUpdateElementTool(mockClient as any);
+    const result = await tool.handler({
+      page_name: 'dashboard',
+      element_id: 'nonexistent',
+      new_name: 'Something',
+    });
+
+    expect(result.isError).toBe(true);
+    const data = JSON.parse(result.content[0].text);
+    expect(data.error).toContain('not found');
     expect(mockWrite).not.toHaveBeenCalled();
   });
 

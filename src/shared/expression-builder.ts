@@ -64,7 +64,17 @@ export function buildComparison(
 
   const opNode: Record<string, unknown> = { '%x': 'Message', '%nm': operator };
   if (argumentDsl !== undefined) {
-    opNode['%a'] = buildExpression(argumentDsl);
+    // Bubble expects raw values for literal arguments, not expression objects.
+    // e.g., %a: 0, not %a: { "%x": "LiteralNumber", "%v": 0 }
+    const argExpr = buildExpression(argumentDsl);
+    const argType = argExpr['%x'] as string;
+    if ((argType === 'LiteralNumber' || argType === 'LiteralBoolean') && argExpr['%v'] !== undefined) {
+      opNode['%a'] = argExpr['%v'];
+    } else if (argType === 'LiteralText' && argExpr['%v'] !== undefined) {
+      opNode['%a'] = argExpr['%v'];
+    } else {
+      opNode['%a'] = argExpr;
+    }
   }
 
   const deepest = findDeepestNode(subject);

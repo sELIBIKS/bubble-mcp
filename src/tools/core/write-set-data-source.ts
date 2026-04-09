@@ -4,6 +4,7 @@ import type { EditorClient } from '../../auth/editor-client.js';
 import { loadAppDefinition } from '../../auth/load-app-definition.js';
 import { successResult } from '../../middleware/error-handler.js';
 import { buildExpression } from '../../shared/expression-builder.js';
+import { resolveElementKey } from '../../shared/resolve-element-key.js';
 
 export function createSetDataSourceTool(editorClient: EditorClient): ToolDefinition {
   return {
@@ -55,19 +56,36 @@ export function createSetDataSourceTool(editorClient: EditorClient): ToolDefinit
       }
 
       const pathId = pagePath.split('.')[1];
+
+      const resolved = await resolveElementKey(editorClient, pathId, elementId);
+      if (!resolved) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: `Element "${elementId}" not found on page "${pageName}"`,
+              }),
+            },
+          ],
+          isError: true,
+        };
+      }
+      const elKey = resolved.key;
+
       const expr = buildExpression(expression);
 
       const changes: Array<{ body: unknown; pathArray: string[] }> = [
         {
           body: { '%x': 'TextExpression', '%e': { '0': expr } },
-          pathArray: ['%p3', pathId, '%el', elementId, '%p', '%3'],
+          pathArray: ['%p3', pathId, '%el', elKey, '%p', '%3'],
         },
       ];
 
       if (previewText !== undefined) {
         changes.push({
           body: previewText,
-          pathArray: ['%p3', pathId, '%el', elementId, '%p', 'editor_preview_text'],
+          pathArray: ['%p3', pathId, '%el', elKey, '%p', 'editor_preview_text'],
         });
       }
 

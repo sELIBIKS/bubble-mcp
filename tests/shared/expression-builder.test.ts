@@ -67,7 +67,7 @@ describe('buildComparison', () => {
         '%n': {
           '%x': 'Message',
           '%nm': 'equals',
-          '%a': { '%x': 'LiteralBoolean', '%v': true },
+          '%a': true,
         },
       },
     });
@@ -98,7 +98,7 @@ describe('buildComparison', () => {
         '%n': {
           '%x': 'Message',
           '%nm': 'equals',
-          '%a': { '%x': 'LiteralNumber', '%v': 0 },
+          '%a': 0,
         },
       },
     });

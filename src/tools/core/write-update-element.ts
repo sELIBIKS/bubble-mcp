@@ -3,6 +3,7 @@ import type { ToolDefinition } from '../../types.js';
 import type { EditorClient } from '../../auth/editor-client.js';
 import { loadAppDefinition } from '../../auth/load-app-definition.js';
 import { successResult } from '../../middleware/error-handler.js';
+import { resolveElementKey } from '../../shared/resolve-element-key.js';
 
 export function createUpdateElementTool(editorClient: EditorClient): ToolDefinition {
   return {
@@ -53,12 +54,28 @@ export function createUpdateElementTool(editorClient: EditorClient): ToolDefinit
       const pathParts = pagePath.split('.');
       const pathId = pathParts[1];
 
+      const resolved = await resolveElementKey(editorClient, pathId, elementId);
+      if (!resolved) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify({
+                error: `Element "${elementId}" not found on page "${pageName}"`,
+              }),
+            },
+          ],
+          isError: true,
+        };
+      }
+      const elKey = resolved.key;
+
       const changes: Array<{ body: unknown; pathArray: string[] }> = [];
 
       if (newName !== undefined) {
         changes.push({
           body: newName,
-          pathArray: ['%p3', pathId, '%el', elementId, '%nm'],
+          pathArray: ['%p3', pathId, '%el', elKey, '%nm'],
         });
       }
 
@@ -66,7 +83,7 @@ export function createUpdateElementTool(editorClient: EditorClient): ToolDefinit
         const parentValue = newParentId === 'null' ? null : newParentId;
         changes.push({
           body: parentValue,
-          pathArray: ['%p3', pathId, '%el', elementId, 'parent'],
+          pathArray: ['%p3', pathId, '%el', elKey, 'parent'],
         });
       }
 
