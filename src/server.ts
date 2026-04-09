@@ -34,6 +34,14 @@ import { createUpdateApiWorkflowTool } from './tools/core/write-update-api-workf
 import { createAddConditionTool } from './tools/core/write-add-condition.js';
 import { createCreateWorkflowTool } from './tools/core/write-create-workflow.js';
 import { createCreatePrivacyRuleTool } from './tools/core/write-create-privacy-rule.js';
+import { createAppReviewTool } from './tools/core/app-review.js';
+import { createAuditPrivacyTool } from './tools/core/audit-privacy.js';
+import { createAuditNamingTool } from './tools/core/audit-naming.js';
+import { createAuditStructureTool } from './tools/core/audit-structure.js';
+import { createAuditReferencesTool } from './tools/core/audit-references.js';
+import { createAuditDeadCodeTool } from './tools/core/audit-dead-code.js';
+import { createAuditDatabaseTool } from './tools/core/audit-database.js';
+import { createDiscoverUnknownKeysTool } from './tools/core/discover-unknown-keys.js';
 import type { BubbleConfig, ToolDefinition, SeedTracker } from './types.js';
 import { createSchemaTool } from './tools/core/schema.js';
 import { createSearchTool } from './tools/core/search.js';
@@ -100,7 +108,7 @@ export function createServer(config: BubbleConfig): {
     ...getCoreTools(client, config),
     ...getCompoundTools(client, config),
     ...getDeveloperTools(client, config, seedTracker),
-    ...(editorClient ? getEditorTools(editorClient) : []),
+    ...(editorClient ? getEditorTools(editorClient, client) : []),
   ];
 
   // Filter by server mode
@@ -201,7 +209,7 @@ function getDeveloperTools(
   ];
 }
 
-function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
+function getEditorTools(editorClient: EditorClient, client: BubbleClient | null = null): ToolDefinition[] {
   return [
     createEditorStatusTool(editorClient),
     createAppStructureTool(editorClient),
@@ -233,5 +241,14 @@ function getEditorTools(editorClient: EditorClient): ToolDefinition[] {
     createAddConditionTool(editorClient),
     createCreateWorkflowTool(editorClient),
     createCreatePrivacyRuleTool(editorClient),
+    // Analysis tools (Phase 3)
+    createAppReviewTool(editorClient, client),
+    createAuditPrivacyTool(editorClient),
+    createAuditNamingTool(editorClient),
+    createAuditStructureTool(editorClient),
+    createAuditReferencesTool(editorClient),
+    createAuditDeadCodeTool(editorClient, client),
+    createAuditDatabaseTool(editorClient, client),
+    createDiscoverUnknownKeysTool(editorClient),
   ];
 }
