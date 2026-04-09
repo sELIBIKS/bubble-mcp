@@ -35,7 +35,7 @@ export function createCreateWorkflowTool(editorClient: EditorClient): ToolDefini
       actions: z
         .array(
           z.object({
-            type: z.string().describe('Action type (e.g., NavigateTo, RefreshPage, MakeChangeCurrentUser, NewThing, SignUp)'),
+            type: z.string().describe('Action type (e.g., MakeChangeCurrentUser, RefreshPage, NewThing, SignUp)'),
             properties: z.record(z.unknown()).optional().describe('Action-specific properties'),
           }),
         )
