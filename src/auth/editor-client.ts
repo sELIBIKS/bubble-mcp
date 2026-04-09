@@ -112,6 +112,20 @@ export class EditorClient {
     }
   }
 
+  async getDerived(functionName: string): Promise<Record<string, unknown>> {
+    const { hash } = await this.post<{ hash: string }>(
+      '/appeditor/calculate_derived',
+      {
+        appname: this.appId,
+        app_version: this.version,
+        function_name: functionName,
+      },
+    );
+    return this.get<Record<string, unknown>>(
+      `/appeditor/derived/${this.appId}/${this.version}/${hash}`,
+    );
+  }
+
   private headers(): Record<string, string> {
     return {
       Cookie: this.cookieHeader,
