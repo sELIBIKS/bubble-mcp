@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run build        # Compile TypeScript to dist/
 npm run dev          # Run from source via tsx (no build needed)
 npm run setup <id>   # Browser auth for editor access (first-time)
-npm test             # Run all 213+ tests (vitest)
+npm test             # Run all 472+ tests (vitest)
 npm run test:watch   # Tests in watch mode
 npm run lint         # ESLint
 npm run lint:fix     # ESLint with auto-fix
@@ -17,11 +17,15 @@ npm run typecheck    # tsc --noEmit
 
 # Run a single test file
 npx vitest run tests/tools/core/search.test.ts
+
+# Auth with branch support
+npm run setup <app-id> -- --version <branch-id>
+npm run setup <app-id> -- --branch <branch-name>
 ```
 
 ## Architecture
 
-This is an MCP server for Bubble.io that exposes 30 tools over stdio transport. Tools are organized in three layers (plus optional editor tools) with a hierarchical permission model.
+This is an MCP server for Bubble.io that exposes 65 tools over stdio transport. Tools are organized in three layers (plus optional editor tools) with a hierarchical permission model.
 
 ### Entry Flow
 
@@ -44,19 +48,47 @@ This is an MCP server for Bubble.io that exposes 30 tools over stdio transport. 
 | Core | `src/tools/core/` | 11 | CRUD, search, schema, workflows, swagger |
 | Compound | `src/tools/compound/` | 7 | Multi-step analysis (privacy audit, orphans, field usage) |
 | Developer | `src/tools/developer/` | 10 | TDD validation, migration planning, seed data |
-| Editor | `src/tools/core/` | 2 | App structure, editor session (requires browser auth) |
+| Editor Read | `src/tools/core/` | 12 | App structure, pages, elements, workflows, data types, styles (requires browser auth) |
+| Editor Write | `src/tools/core/` | 17 | Create/update types, fields, pages, elements, workflows, privacy rules |
+| Analysis | `src/tools/core/` | 8 | App review, 6 category audits, auto-learner (requires editor auth) |
 
 ### Editor Auth (`src/auth/`)
 
 Optional browser-based authentication for accessing Bubble's internal editor endpoints. Provides deep app structure access (pages, workflows, data types with privacy rules, option sets) beyond what the Data API offers.
 
-- **Setup:** `npm run setup <app-id>` — opens Playwright browser, user logs in, cookies are captured after redirect to `bubble.io/home/projects`, then editor page is visited for app-specific session state
-- **Storage:** `~/.bubble-mcp/sessions.json` — per-app session cookies
+- **Setup:** `npm run setup <app-id>` — opens Playwright browser, user logs in, cookies are captured
+- **Branch support:** `npm run setup <app-id> -- --version <branch-id>` — stores version for branch access
+- **Storage:** `~/.bubble-mcp/sessions.json` — per-app session cookies + version
 - **Session Manager** (`session-manager.ts`) — CRUD for stored cookies
 - **Browser Login** (`browser-login.ts`) — Playwright headed browser flow, auto-installs Playwright if missing
-- **Editor Client** (`editor-client.ts`) — HTTP client for `/appeditor/*` endpoints (load_multiple_paths, load_single_path, changes)
-- **App Definition** (`app-definition.ts`) — Parses editor change stream into structured data types, option sets, pages, settings
+- **Editor Client** (`editor-client.ts`) — HTTP client for `/appeditor/*` endpoints; auto-resolves branch hashes via Crockford Base32 path encoding
+- **App Definition** (`app-definition.ts`) — Parses editor data into structured data types, option sets, pages, settings; handles inline `%f3` fields and `values` map for option sets
+- **Mobile Definition** (`mobile-definition.ts`) — Loads mobile editor data via `getDerived` or `id_to_path` fallback
+- **Load App Definition** (`load-app-definition.ts`) — Orchestrates loading from changes stream + hash resolution on branches; discovers pages via `id_to_path`; caches page data for element/workflow access
 - **Auto-detection:** Server loads cookies on startup; editor tools only register if a valid session exists
+
+### Branch Data Loading
+
+On branches (version ≠ `test`/`live`), Bubble's editor API returns `path_version_hash` instead of inline data. The `EditorClient` auto-resolves these by:
+1. Computing a Crockford Base32-encoded path suffix from the path array
+2. Fetching `/appeditor/load_single_path/{appId}/{version}/{hash}/{encoded_path}`
+
+This is deterministic — no session dependency, no expiration, always live data.
+
+### Rules Engine (`src/shared/rules/`)
+
+25 rules across 6 categories powering the analysis tools:
+
+| Category | Rules | File |
+|----------|-------|------|
+| Privacy | 5 | `privacy.ts` |
+| Naming | 4 | `naming.ts` |
+| Structure | 4 | `structure.ts` |
+| References | 4 | `references.ts` |
+| Dead Code | 4 | `dead-code.ts` |
+| Database | 4 | `database.ts` |
+
+Registry in `index.ts`, types in `types.ts`, runner/scoring in `registry.ts`.
 
 ### Adding a New Tool
 
@@ -72,6 +104,7 @@ Optional browser-based authentication for accessing Bubble's internal editor end
 - **constants.ts** — `CHARACTER_LIMIT`, `EXCLUDED_FIELDS`, `SENSITIVE_PATTERNS`, `PII_PATTERNS`, `matchesAny`, `truncateResponse`
 - **types.ts** — `SearchResponse`, `CountResponse` (shared across compound/developer tools)
 - **graph.ts** — `topologicalSort`, `topologicalSortTypes` (dependency ordering for migrations/seeding)
+- **rules/** — Rules engine: types, registry, runner, scoring, 6 category files
 
 ### BubbleClient (`src/bubble-client.ts`)
 
@@ -83,7 +116,7 @@ HTTP client that wraps `fetch` with Bearer token auth. Appends `/version-test` t
 - `ToolAnnotations` — MCP hints: readOnlyHint, destructiveHint, idempotentHint, openWorldHint
 - `BubbleConfig` — appUrl, apiToken, mode, environment, rateLimit
 - `SeedTracker` — tracks seeded record IDs for cleanup
-- `EditorConfig` — appId, version, cookieHeader (for editor session)
+- `EditorConfig` — appId, version (string — 'test', 'live', or branch ID), cookieHeader
 
 ## Testing Patterns
 
@@ -99,6 +132,7 @@ const data = JSON.parse(result.content[0].text);
 - Success: parse `result.content[0].text` as JSON — data is returned directly (no wrapper)
 - Error: check `result.isError === true` and `data.error` for the message
 - TDD tools write temp files to `process.cwd()` (sandboxed path restriction)
+- Mock `appDef` objects must include `getPageData: () => null` when testing rules that check page elements
 
 ## Security Constraints
 
@@ -107,3 +141,13 @@ const data = JSON.parse(result.content[0].text);
 - The API token is never included in tool responses or error messages
 - Responses are auto-truncated at 50KB via iterative array halving
 - `find_orphans` is capped at 500 API calls per invocation
+
+## Branch Data Gotchas
+
+- `getChanges()` on branches returns only branch-specific deltas, not the full app state
+- `loadPaths` auto-resolves hashes using Crockford Base32 path encoding (no stored nonces needed)
+- Page root data includes inline `%el` and `%wf` — use `AppDefinition.getPageData()` when separate subtree loading returns empty
+- Workflow actions are stored as `actions` (numeric keys) in branch data vs `%a` (action ID keys) in changes stream — check both
+- `getDerived` may fail with 500 on some branches — `MobileDefinition` falls back to `id_to_path`
+- Field type format: `%f3` fields use `%v` for type in branch data vs `%t` in changes stream — `getDataTypes()` checks both
+- Option sets use `values` map in branch data vs `options` array in changes stream — `getOptionSets()` handles both
