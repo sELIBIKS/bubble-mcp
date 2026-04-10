@@ -1,4 +1,29 @@
 import type { Rule, Finding, AppContext } from './types.js';
+import type { PagePathInfo } from '../../auth/app-definition.js';
+
+/**
+ * Get element and workflow data for a page, falling back to cached page data
+ * when separate %el/%wf subtree loading returns empty (branch mode).
+ */
+function getPageSubtree(
+  subtreeData: unknown,
+  subtreeKey: string,
+  pagePath: string | null,
+  ctx: AppContext,
+): Record<string, unknown> | null {
+  // If loadPaths returned data directly, use it
+  if (subtreeData && typeof subtreeData === 'object' && Object.keys(subtreeData as Record<string, unknown>).length > 0) {
+    return subtreeData as Record<string, unknown>;
+  }
+  // Fall back to cached page data (inline %el/%wf from branch page root)
+  if (pagePath) {
+    const cached = ctx.appDef.getPageData(pagePath);
+    if (cached?.[subtreeKey] && typeof cached[subtreeKey] === 'object') {
+      return cached[subtreeKey] as Record<string, unknown>;
+    }
+  }
+  return null;
+}
 
 const structureEmptyPage: Rule = {
   id: 'structure-empty-page', category: 'structure', severity: 'warning',
@@ -7,13 +32,13 @@ const structureEmptyPage: Rule = {
     const findings: Finding[] = [];
     const pages = ctx.appDef.getPagePaths();
     if (pages.length === 0) return findings;
-    const pathArrays = pages.filter(p => p.path).map(p => [...p.path!.split('.'), '%el']);
+    const pagesWithPaths = pages.filter(p => p.path);
+    const pathArrays = pagesWithPaths.map(p => [...p.path!.split('.'), '%el']);
     if (pathArrays.length === 0) return findings;
     const result = await ctx.editorClient.loadPaths(pathArrays);
-    const pagesWithPaths = pages.filter(p => p.path);
     for (let i = 0; i < pagesWithPaths.length; i++) {
-      const elData = result.data[i]?.data;
-      if (!(elData && typeof elData === 'object' && Object.keys(elData).length > 0)) {
+      const elData = getPageSubtree(result.data[i]?.data, '%el', pagesWithPaths[i].path, ctx);
+      if (!elData || Object.keys(elData).length === 0) {
         findings.push({ ruleId: 'structure-empty-page', severity: 'warning', category: 'structure', target: pagesWithPaths[i].name, message: `Page '${pagesWithPaths[i].name}' has no elements`, platform: 'web' });
       }
     }
@@ -62,10 +87,10 @@ const structureNoWorkflows: Rule = {
     }
     const result = await ctx.editorClient.loadPaths(pathArrays);
     for (let i = 0; i < pages.length; i++) {
-      const elData = result.data[i * 2]?.data;
-      const wfData = result.data[i * 2 + 1]?.data;
-      const hasElements = elData && typeof elData === 'object' && Object.keys(elData).length > 0;
-      const hasWorkflows = wfData && typeof wfData === 'object' && Object.keys(wfData).length > 0;
+      const elData = getPageSubtree(result.data[i * 2]?.data, '%el', pages[i].path, ctx);
+      const wfData = getPageSubtree(result.data[i * 2 + 1]?.data, '%wf', pages[i].path, ctx);
+      const hasElements = elData && Object.keys(elData).length > 0;
+      const hasWorkflows = wfData && Object.keys(wfData).length > 0;
       if (hasElements && !hasWorkflows) {
         findings.push({ ruleId: 'structure-no-workflows', severity: 'info', category: 'structure', target: pages[i].name, message: `Page '${pages[i].name}' has elements but no workflows` });
       }

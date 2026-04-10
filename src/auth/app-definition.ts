@@ -65,6 +65,7 @@ export class AppDefinition {
   private apiConnectors = new Map<string, Map<string, unknown>>();
   private stylesMap = new Map<string, unknown>();
   private reusableElementIndex = new Map<string, string>();
+  private pageDataCache = new Map<string, Record<string, unknown>>(); // pagePath → raw page data (with inline %el)
 
   static fromChanges(changes: EditorChange[]): AppDefinition {
     const def = new AppDefinition();
@@ -131,6 +132,8 @@ export class AppDefinition {
           if (pageName && obj['%x'] === 'Page') {
             def.pages.set(pageName, pageId || sub);
             def.pagePaths.set(pageName, `%p3.${sub}`);
+            // Cache page data for branch element access
+            def.pageDataCache.set(`%p3.${sub}`, obj);
           }
         }
       }
@@ -354,6 +357,22 @@ export class AppDefinition {
         }
       }
     }
+  }
+
+  /**
+   * Store raw page data (including inline %el, %wf) for branch pages
+   * where separate subtree loading may not work.
+   */
+  setPageData(pagePath: string, data: Record<string, unknown>): void {
+    this.pageDataCache.set(pagePath, data);
+  }
+
+  /**
+   * Get cached page data. Returns null if not cached.
+   * On branches, this contains the full page object including inline %el.
+   */
+  getPageData(pagePath: string): Record<string, unknown> | null {
+    return this.pageDataCache.get(pagePath) ?? null;
   }
 
   getSummary(): AppSummary {

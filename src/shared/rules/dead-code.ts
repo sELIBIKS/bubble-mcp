@@ -54,7 +54,12 @@ const deadEmptyWorkflow: Rule = {
     const pathArrays = pages.map(p => [...p.path!.split('.'), '%wf']);
     const result = await ctx.editorClient.loadPaths(pathArrays);
     for (let i = 0; i < pages.length; i++) {
-      const wfData = result.data[i]?.data;
+      let wfData = result.data[i]?.data;
+      // Fall back to cached page data for branch support
+      if ((!wfData || typeof wfData !== 'object') && pages[i].path) {
+        const cached = ctx.appDef.getPageData(pages[i].path!);
+        if (cached?.['%wf'] && typeof cached['%wf'] === 'object') wfData = cached['%wf'];
+      }
       if (!wfData || typeof wfData !== 'object') continue;
       for (const [wfKey, wf] of Object.entries(wfData as Record<string, unknown>)) {
         const wfObj = wf as Record<string, unknown>;
@@ -81,7 +86,12 @@ const deadOrphanPage: Rule = {
     const result = await ctx.editorClient.loadPaths(pathArrays);
     const referencedPages = new Set<string>();
     for (let i = 0; i < pages.length; i++) {
-      const wfData = result.data[i]?.data;
+      let wfData = result.data[i]?.data;
+      // Fall back to cached page data for branch support
+      if (!wfData && pages[i].path) {
+        const cached = ctx.appDef.getPageData(pages[i].path!);
+        if (cached?.['%wf'] && typeof cached['%wf'] === 'object') wfData = cached['%wf'];
+      }
       if (!wfData) continue;
       const serialized = JSON.stringify(wfData);
       for (const page of pages) {

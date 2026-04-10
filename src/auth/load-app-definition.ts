@@ -41,6 +41,8 @@ export async function loadAppDefinition(editorClient: EditorClient): Promise<App
   // Use id_to_path to discover all pages created on the branch.
   if (isBranch) {
     await mergeBranchPages(editorClient, def);
+    // Ensure all pages have cached data (for element/workflow access on branches)
+    await cacheAllPageData(editorClient, def);
   }
 
   return def;
@@ -164,6 +166,32 @@ async function mergeBranchPages(
         { [pageName]: newPagePaths[i].id },
         { [pageName]: newPagePaths[i].path },
       );
+      // Cache the page data (includes inline %el, %wf for branch support)
+      def.setPageData(newPagePaths[i].path, pageData);
+    }
+  }
+}
+
+/**
+ * Ensure all pages have cached root data (including inline %el, %wf).
+ * On branches, separate %el/%wf subtree loading returns hashes without nonces,
+ * but the page root data includes elements/workflows inline.
+ */
+async function cacheAllPageData(
+  editorClient: EditorClient,
+  def: AppDefinition,
+): Promise<void> {
+  const pages = def.getPagePaths().filter(p => p.path);
+  const uncached = pages.filter(p => !def.getPageData(p.path!));
+  if (uncached.length === 0) return;
+
+  const pathArrays = uncached.map(p => p.path!.split('.'));
+  const result = await editorClient.loadPaths(pathArrays);
+
+  for (let i = 0; i < uncached.length; i++) {
+    const pageData = result.data[i]?.data;
+    if (pageData && typeof pageData === 'object') {
+      def.setPageData(uncached[i].path!, pageData as Record<string, unknown>);
     }
   }
 }

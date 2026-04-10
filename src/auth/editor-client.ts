@@ -60,10 +60,29 @@ export class EditorClient {
   }
 
   async loadPaths(pathArrays: string[][]): Promise<LoadPathsResult> {
-    return this.post<LoadPathsResult>(
+    const result = await this.post<LoadPathsResult>(
       `/appeditor/load_multiple_paths/${this.appId}/${this.version}`,
       { path_arrays: pathArrays },
     );
+
+    // On branches, loadPaths returns path_version_hashes instead of inline data.
+    // Auto-resolve any hash-only entries when we have nonces available.
+    if (Object.keys(this.hashNonces).length === 0) return result;
+
+    const resolved = await Promise.all(
+      result.data.map(async (entry) => {
+        if (entry.data !== undefined || !entry.path_version_hash) return entry;
+        if (!this.hashNonces[entry.path_version_hash]) return entry;
+        try {
+          const full = await this.loadByHash(entry.path_version_hash);
+          return { ...entry, data: full.data };
+        } catch {
+          return entry;
+        }
+      }),
+    );
+
+    return { last_change: result.last_change, data: resolved };
   }
 
   async loadSinglePath(
