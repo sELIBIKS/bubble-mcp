@@ -86,16 +86,6 @@ export async function browserLogin(appId: string, options?: { branch?: string; v
     if (!currentUrl.includes('bubble.io/home')) continue;
 
     // User has navigated away from login — they're authenticated
-    // Set up network interception EARLY to capture all hash→nonce mappings
-    const hashNonces: Record<string, string> = {};
-    page.on('request', (req: { url(): string }) => {
-      const url = req.url();
-      const match = url.match(/\/appeditor\/load_single_path\/[^/]+\/[^/]+\/([a-f0-9]{32})\/(.+)/);
-      if (match) {
-        hashNonces[match[1]] = match[2];
-      }
-    });
-
     // Now go to the editor to capture app-specific session state
     let editorUrl = `https://bubble.io/page?id=${appId}&tab=Design&name=index`;
     let resolvedVersion: string | undefined = explicitVersion;
@@ -178,11 +168,9 @@ export async function browserLogin(appId: string, options?: { branch?: string; v
     if (validateSession(finalCookies)) {
       authenticated = true;
       const mgr = createSessionManager();
-      const noncesToSave = Object.keys(hashNonces).length > 0 ? hashNonces : undefined;
-      mgr.save(appId, finalCookies, resolvedVersion, noncesToSave);
+      mgr.save(appId, finalCookies, resolvedVersion);
       const versionLabel = resolvedVersion ? ` (branch: ${resolvedVersion})` : '';
-      const nonceCount = Object.keys(hashNonces).length > 0 ? `, ${Object.keys(hashNonces).length} hash mappings` : '';
-      console.log(`Authenticated! ${finalCookies.length} cookies saved for app "${appId}"${versionLabel}${nonceCount}.`);
+      console.log(`Authenticated! ${finalCookies.length} cookies saved for app "${appId}"${versionLabel}.`);
       break;
     }
   }

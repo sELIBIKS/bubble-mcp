@@ -86,7 +86,7 @@ export function createServer(config: BubbleConfig): {
   // Optional editor client (requires browser auth)
   const editorConfig = loadEditorConfig(config);
   const editorClient = editorConfig
-    ? new EditorClient(editorConfig.appId, editorConfig.version, editorConfig.cookieHeader, editorConfig.hashNonces)
+    ? new EditorClient(editorConfig.appId, editorConfig.version, editorConfig.cookieHeader)
     : null;
 
   const rateLimiter = new RateLimiter(config.rateLimit);

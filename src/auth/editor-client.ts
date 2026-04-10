@@ -46,17 +46,43 @@ export interface UserPermissions {
   test_only: boolean;
 }
 
+/** Crockford's Base32 encoding — used by Bubble editor for path encoding in URLs */
+const CROCKFORD_ALPHABET = '0123456789abcdefghjkmnpqrtuvwxyz';
+
+export function crockfordBase32Encode(input: string): string {
+  const bytes = new TextEncoder().encode(input);
+  let bits = 0;
+  let value = 0;
+  let output = '';
+
+  for (const byte of bytes) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      output += CROCKFORD_ALPHABET[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+
+  if (bits > 0) {
+    output += CROCKFORD_ALPHABET[(value << (5 - bits)) & 31];
+  }
+
+  return output;
+}
+
 export class EditorClient {
   private readonly base = 'https://bubble.io';
   private readonly sessionId: string;
+  private readonly isBranch: boolean;
 
   constructor(
     public readonly appId: string,
     public readonly version: string,
     private readonly cookieHeader: string,
-    private readonly hashNonces: Record<string, string> = {},
   ) {
     this.sessionId = `bubble-mcp-${Date.now()}`;
+    this.isBranch = version !== 'test' && version !== 'live';
   }
 
   async loadPaths(pathArrays: string[][]): Promise<LoadPathsResult> {
@@ -66,15 +92,14 @@ export class EditorClient {
     );
 
     // On branches, loadPaths returns path_version_hashes instead of inline data.
-    // Auto-resolve any hash-only entries when we have nonces available.
-    if (Object.keys(this.hashNonces).length === 0) return result;
+    // Auto-resolve hash-only entries using the path array to compute the nonce.
+    if (!this.isBranch) return result;
 
     const resolved = await Promise.all(
-      result.data.map(async (entry) => {
+      result.data.map(async (entry, i) => {
         if (entry.data !== undefined || !entry.path_version_hash) return entry;
-        if (!this.hashNonces[entry.path_version_hash]) return entry;
         try {
-          const full = await this.loadByHash(entry.path_version_hash);
+          const full = await this.loadByHash(entry.path_version_hash, pathArrays[i]);
           return { ...entry, data: full.data };
         } catch {
           return entry;
@@ -94,43 +119,19 @@ export class EditorClient {
   /**
    * Load data by path_version_hash. On branches, loadPaths returns hashes instead
    * of data — use this to resolve the hash to actual data.
-   * Requires the correct nonce (captured during browser auth).
+   * The path array is Crockford Base32-encoded to form the URL suffix.
    */
   async loadByHash(
     hash: string,
+    pathArray?: string[],
   ): Promise<{ last_change: number; data?: unknown }> {
-    const nonce = this.hashNonces[hash];
-    if (!nonce) {
-      // No nonce available — return empty (hash can't be resolved without it)
+    if (!pathArray || pathArray.length === 0) {
       return { last_change: 0, data: undefined };
     }
-    return this.get(`/appeditor/load_single_path/${this.appId}/${this.version}/${hash}/${nonce}`);
+    const encodedPath = pathArray.map(crockfordBase32Encode).join('/');
+    return this.get(`/appeditor/load_single_path/${this.appId}/${this.version}/${hash}/${encodedPath}`);
   }
 
-  /**
-   * Load paths, automatically resolving path_version_hashes to data.
-   * On branches, loadPaths may return hashes instead of inline data —
-   * this method fetches the actual data for each hash.
-   */
-  async loadPathsResolved(pathArrays: string[][]): Promise<LoadPathsResult> {
-    const result = await this.loadPaths(pathArrays);
-
-    // Check if any entries have only a hash (no data) — resolve them
-    const resolved = await Promise.all(
-      result.data.map(async (entry) => {
-        if (entry.data !== undefined || !entry.path_version_hash) return entry;
-        // Hash-only entry — fetch actual data
-        try {
-          const full = await this.loadByHash(entry.path_version_hash);
-          return { ...entry, data: full.data };
-        } catch {
-          return entry; // Keep hash-only if fetch fails
-        }
-      }),
-    );
-
-    return { last_change: result.last_change, data: resolved };
-  }
 
   async getChanges(since: number = 0): Promise<EditorChange[]> {
     // Use a unique reader session ID so we see our own writes in the changes stream

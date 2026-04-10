@@ -70,18 +70,9 @@ async function loadBranchData(
   for (let i = 0; i < result.data.length; i++) {
     const entry = result.data[i];
     const root = needed[i];
-    let data: unknown = entry.data;
+    const data: unknown = entry.data;
 
-    // If hash-only, resolve via loadByHash
-    if (!data && entry.path_version_hash) {
-      try {
-        const resolved = await editorClient.loadByHash(entry.path_version_hash);
-        data = resolved.data;
-      } catch {
-        continue;
-      }
-    }
-
+    // loadPaths auto-resolves hashes on branches, so data should be inline
     if (!data || typeof data !== 'object') continue;
 
     // Convert to synthetic changes: one per top-level key
@@ -108,23 +99,10 @@ async function mergeBranchPages(
   editorClient: EditorClient,
   def: AppDefinition,
 ): Promise<void> {
-  // Load id_to_path (may require hash resolution)
+  // Load id_to_path (auto-resolved by loadPaths on branches)
   const result = await editorClient.loadPaths([['_index', 'id_to_path']]);
-  let idToPath: Record<string, string> | null = null;
-
-  const entry = result.data[0];
-  if (entry?.data && typeof entry.data === 'object') {
-    idToPath = entry.data as Record<string, string>;
-  } else if (entry?.path_version_hash) {
-    try {
-      const resolved = await editorClient.loadByHash(entry.path_version_hash);
-      if (resolved.data && typeof resolved.data === 'object') {
-        idToPath = resolved.data as Record<string, string>;
-      }
-    } catch { /* hash resolution failed */ }
-  }
-
-  if (!idToPath) return;
+  const idToPath = result.data[0]?.data as Record<string, string> | null;
+  if (!idToPath || typeof idToPath !== 'object') return;
 
   // Extract page paths: entries like "bTVnB": "%p3.bTVqf" (depth-1 %p3 paths = pages)
   const existingPaths = new Set(def.getPagePaths().map(p => p.path));
@@ -146,19 +124,7 @@ async function mergeBranchPages(
   const pageResult = await editorClient.loadPaths(pathArrays);
 
   for (let i = 0; i < newPagePaths.length; i++) {
-    let pageData: Record<string, unknown> | null = null;
-    const pageEntry = pageResult.data[i];
-
-    if (pageEntry?.data && typeof pageEntry.data === 'object') {
-      pageData = pageEntry.data as Record<string, unknown>;
-    } else if (pageEntry?.path_version_hash) {
-      try {
-        const resolved = await editorClient.loadByHash(pageEntry.path_version_hash);
-        if (resolved.data && typeof resolved.data === 'object') {
-          pageData = resolved.data as Record<string, unknown>;
-        }
-      } catch { /* skip */ }
-    }
+    const pageData = pageResult.data[i]?.data as Record<string, unknown> | null;
 
     if (pageData) {
       const pageName = (pageData['%nm'] as string) || newPagePaths[i].pathKey;

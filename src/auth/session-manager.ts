@@ -11,7 +11,6 @@ export interface StoredCookie {
 interface SessionEntry {
   cookies: StoredCookie[];
   version?: string; // branch ID or 'test'/'live'
-  hashNonces?: Record<string, string>; // path_version_hash → nonce (for branch data loading)
 }
 
 interface SessionStore {
@@ -24,10 +23,9 @@ function normalizeEntry(raw: StoredCookie[] | SessionEntry): SessionEntry {
 }
 
 export interface SessionManager {
-  save(appId: string, cookies: StoredCookie[], version?: string, hashNonces?: Record<string, string>): void;
+  save(appId: string, cookies: StoredCookie[], version?: string): void;
   load(appId: string): StoredCookie[] | null;
   getVersion(appId: string): string | null;
-  getHashNonces(appId: string): Record<string, string> | null;
   clear(appId: string): void;
   clearAll(): void;
   getCookieHeader(appId: string): string | null;
@@ -56,9 +54,9 @@ export function createSessionManager(dir: string = DEFAULT_DIR): SessionManager 
   }
 
   return {
-    save(appId, cookies, version, hashNonces) {
+    save(appId, cookies, version) {
       const store = readStore();
-      store[appId] = { cookies, version, hashNonces };
+      store[appId] = { cookies, version };
       writeStore(store);
     },
 
@@ -74,13 +72,6 @@ export function createSessionManager(dir: string = DEFAULT_DIR): SessionManager 
       const raw = store[appId];
       if (!raw) return null;
       return normalizeEntry(raw).version ?? null;
-    },
-
-    getHashNonces(appId) {
-      const store = readStore();
-      const raw = store[appId];
-      if (!raw) return null;
-      return normalizeEntry(raw).hashNonces ?? null;
     },
 
     clear(appId) {

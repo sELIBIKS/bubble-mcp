@@ -44,14 +44,7 @@ export class MobileDefinition {
     const result = await editorClient.loadPaths(pathArrays);
 
     for (let i = 0; i < pageKeysList.length; i++) {
-      let pageData = result.data[i]?.data;
-      // Resolve hash if needed (branch mode)
-      if (!pageData && result.data[i]?.path_version_hash) {
-        try {
-          const resolved = await editorClient.loadByHash(result.data[i].path_version_hash!);
-          pageData = resolved.data;
-        } catch { /* skip */ }
-      }
+      const pageData = result.data[i]?.data;
       if (!pageData || typeof pageData !== 'object') continue;
       const obj = pageData as Record<string, unknown>;
       const pageName = (obj['%nm'] as string) || pageKeysList[i];
@@ -61,13 +54,7 @@ export class MobileDefinition {
     }
 
     for (let i = 0; i < mobileElementPaths.length; i++) {
-      let elData = result.data[pageKeysList.length + i]?.data;
-      if (!elData && result.data[pageKeysList.length + i]?.path_version_hash) {
-        try {
-          const resolved = await editorClient.loadByHash(result.data[pageKeysList.length + i].path_version_hash!);
-          elData = resolved.data;
-        } catch { /* skip */ }
-      }
+      const elData = result.data[pageKeysList.length + i]?.data;
       if (!elData || typeof elData !== 'object') continue;
       const obj = elData as Record<string, unknown>;
       const el = mobileElementPaths[i];
@@ -152,17 +139,7 @@ async function discoverMobilePaths(editorClient: EditorClient): Promise<Discover
   // Fallback: use id_to_path to discover mobile pages/elements
   try {
     const result = await editorClient.loadPaths([['_index', 'id_to_path']]);
-    let idToPath: Record<string, string> | null = null;
-
-    const entry = result.data[0];
-    if (entry?.data && typeof entry.data === 'object') {
-      idToPath = entry.data as Record<string, string>;
-    } else if (entry?.path_version_hash) {
-      const resolved = await editorClient.loadByHash(entry.path_version_hash);
-      if (resolved.data && typeof resolved.data === 'object') {
-        idToPath = resolved.data as Record<string, string>;
-      }
-    }
+    const idToPath = result.data[0]?.data as Record<string, string> | null;
 
     if (idToPath) {
       for (const [, path] of Object.entries(idToPath)) {
