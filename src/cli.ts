@@ -41,8 +41,8 @@ if (command === 'auth' || command === 'setup') {
       process.exit(1);
     }
     const branch = getFlag('branch');
-    const versionOverride = getFlag('version');
-    await browserLogin(appId, branch || versionOverride);
+    const version = getFlag('version');
+    await browserLogin(appId, (branch || version) ? { branch, version } : undefined);
   } else if (subcommand === 'status') {
     const { checkStatus } = await import('./auth/session-manager.js');
     await checkStatus();

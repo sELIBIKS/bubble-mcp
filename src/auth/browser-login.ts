@@ -56,7 +56,9 @@ async function loadPlaywright() {
   }
 }
 
-export async function browserLogin(appId: string, branch?: string): Promise<void> {
+export async function browserLogin(appId: string, options?: { branch?: string; version?: string }): Promise<void> {
+  const branch = options?.branch;
+  const explicitVersion = options?.version;
   const chromium = await loadPlaywright();
 
   console.log(`Opening browser for Bubble login...`);
@@ -86,9 +88,12 @@ export async function browserLogin(appId: string, branch?: string): Promise<void
     // User has navigated away from login — they're authenticated
     // Now go to the editor to capture app-specific session state
     let editorUrl = `https://bubble.io/page?id=${appId}&tab=Design&name=index`;
-    let resolvedVersion: string | undefined;
+    let resolvedVersion: string | undefined = explicitVersion;
 
-    if (branch) {
+    if (explicitVersion) {
+      // User provided exact version ID — use it directly
+      console.log(`\nLogin successful! Using version "${explicitVersion}" for "${appId}"...`);
+    } else if (branch) {
       // Detect branch version ID by loading editor and checking available branches
       console.log(`\nLogin successful! Detecting branch "${branch}" for "${appId}"...`);
       await page.goto(editorUrl, { waitUntil: 'domcontentloaded' });
