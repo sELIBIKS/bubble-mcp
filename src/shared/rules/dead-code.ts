@@ -62,9 +62,11 @@ const deadEmptyWorkflow: Rule = {
       }
       if (!wfData || typeof wfData !== 'object') continue;
       for (const [wfKey, wf] of Object.entries(wfData as Record<string, unknown>)) {
+        if (!wf || typeof wf !== 'object') continue;
         const wfObj = wf as Record<string, unknown>;
-        const actions = wfObj['%a'] as Record<string, unknown> | undefined;
-        const actionCount = actions ? Object.keys(actions).length : 0;
+        // Actions stored as '%a' (changes stream) or 'actions' (hash-loaded/inline data)
+        const actions = (wfObj['%a'] ?? wfObj['actions']) as Record<string, unknown> | undefined;
+        const actionCount = actions && typeof actions === 'object' ? Object.keys(actions).length : 0;
         if (actionCount === 0) {
           const wfType = (wfObj['%x'] as string) || 'Unknown';
           findings.push({ ruleId: 'dead-empty-workflow', severity: 'info', category: 'dead-code', target: `${pages[i].name}/${wfType}`, message: `Workflow '${wfType}' on page '${pages[i].name}' has zero actions` });
