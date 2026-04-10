@@ -26,24 +26,9 @@ export class MobileDefinition {
 
   static async load(editorClient: EditorClient): Promise<MobileDefinition> {
     const def = new MobileDefinition();
-    const derived = await editorClient.getDerived('ElementTypeToPath');
 
-    const mobilePageKeys = new Set<string>();
-    const mobileElementPaths: Array<{ pageKey: string; elKey: string; path: string[] }> = [];
-
-    for (const [, pathMap] of Object.entries(derived)) {
-      if (typeof pathMap !== 'object' || pathMap === null) continue;
-      for (const dotPath of Object.keys(pathMap as Record<string, unknown>)) {
-        if (!dotPath.startsWith('mobile_views.')) continue;
-        const parts = dotPath.split('.');
-        if (parts.length === 2) {
-          mobilePageKeys.add(parts[1]);
-        } else if (parts.length >= 4 && parts[2] === '%el') {
-          mobilePageKeys.add(parts[1]);
-          mobileElementPaths.push({ pageKey: parts[1], elKey: parts[3], path: parts });
-        }
-      }
-    }
+    // Try getDerived first; fall back to id_to_path on branches where it fails
+    const { mobilePageKeys, mobileElementPaths } = await discoverMobilePaths(editorClient);
 
     if (mobilePageKeys.size === 0) return def;
 
@@ -59,7 +44,14 @@ export class MobileDefinition {
     const result = await editorClient.loadPaths(pathArrays);
 
     for (let i = 0; i < pageKeysList.length; i++) {
-      const pageData = result.data[i]?.data;
+      let pageData = result.data[i]?.data;
+      // Resolve hash if needed (branch mode)
+      if (!pageData && result.data[i]?.path_version_hash) {
+        try {
+          const resolved = await editorClient.loadByHash(result.data[i].path_version_hash!);
+          pageData = resolved.data;
+        } catch { /* skip */ }
+      }
       if (!pageData || typeof pageData !== 'object') continue;
       const obj = pageData as Record<string, unknown>;
       const pageName = (obj['%nm'] as string) || pageKeysList[i];
@@ -69,7 +61,13 @@ export class MobileDefinition {
     }
 
     for (let i = 0; i < mobileElementPaths.length; i++) {
-      const elData = result.data[pageKeysList.length + i]?.data;
+      let elData = result.data[pageKeysList.length + i]?.data;
+      if (!elData && result.data[pageKeysList.length + i]?.path_version_hash) {
+        try {
+          const resolved = await editorClient.loadByHash(result.data[pageKeysList.length + i].path_version_hash!);
+          elData = resolved.data;
+        } catch { /* skip */ }
+      }
       if (!elData || typeof elData !== 'object') continue;
       const obj = elData as Record<string, unknown>;
       const el = mobileElementPaths[i];
@@ -119,4 +117,74 @@ export class MobileDefinition {
   }
 
   getRawPages(): Map<string, Record<string, unknown>> { return new Map(this.pages); }
+}
+
+interface DiscoveredPaths {
+  mobilePageKeys: Set<string>;
+  mobileElementPaths: Array<{ pageKey: string; elKey: string; path: string[] }>;
+}
+
+async function discoverMobilePaths(editorClient: EditorClient): Promise<DiscoveredPaths> {
+  const mobilePageKeys = new Set<string>();
+  const mobileElementPaths: Array<{ pageKey: string; elKey: string; path: string[] }> = [];
+
+  // Try getDerived first (works on test/live, may fail on branches)
+  try {
+    const derived = await editorClient.getDerived('ElementTypeToPath');
+    for (const [, pathMap] of Object.entries(derived)) {
+      if (typeof pathMap !== 'object' || pathMap === null) continue;
+      for (const dotPath of Object.keys(pathMap as Record<string, unknown>)) {
+        if (!dotPath.startsWith('mobile_views.')) continue;
+        const parts = dotPath.split('.');
+        if (parts.length === 2) {
+          mobilePageKeys.add(parts[1]);
+        } else if (parts.length >= 4 && parts[2] === '%el') {
+          mobilePageKeys.add(parts[1]);
+          mobileElementPaths.push({ pageKey: parts[1], elKey: parts[3], path: parts });
+        }
+      }
+    }
+    return { mobilePageKeys, mobileElementPaths };
+  } catch {
+    // getDerived failed — fall back to id_to_path
+  }
+
+  // Fallback: use id_to_path to discover mobile pages/elements
+  try {
+    const result = await editorClient.loadPaths([['_index', 'id_to_path']]);
+    let idToPath: Record<string, string> | null = null;
+
+    const entry = result.data[0];
+    if (entry?.data && typeof entry.data === 'object') {
+      idToPath = entry.data as Record<string, string>;
+    } else if (entry?.path_version_hash) {
+      const resolved = await editorClient.loadByHash(entry.path_version_hash);
+      if (resolved.data && typeof resolved.data === 'object') {
+        idToPath = resolved.data as Record<string, string>;
+      }
+    }
+
+    if (idToPath) {
+      for (const [, path] of Object.entries(idToPath)) {
+        if (typeof path !== 'string' || !path.startsWith('mobile_views.')) continue;
+        const parts = path.split('.');
+        // mobile_views.{pageKey} = page (depth 2, but id_to_path has the page ID as key)
+        if (parts.length === 2) {
+          mobilePageKeys.add(parts[1]);
+        }
+        // mobile_views.{pageKey}.%el.{elKey}... = element
+        if (parts.length >= 4 && parts[2] === '%el') {
+          mobilePageKeys.add(parts[1]);
+          // Only take direct children (depth 4), not nested elements
+          if (parts.length === 4) {
+            mobileElementPaths.push({ pageKey: parts[1], elKey: parts[3], path: parts });
+          }
+        }
+      }
+    }
+  } catch {
+    // id_to_path also failed — no mobile data available
+  }
+
+  return { mobilePageKeys, mobileElementPaths };
 }

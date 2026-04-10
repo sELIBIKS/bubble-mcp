@@ -74,6 +74,17 @@ export class AppDefinition {
 
       if (root === 'user_types' && sub && change.path.length === 2) {
         def.userTypes.set(sub, change.data);
+        // Extract inline %f3 fields (present in hash-loaded branch data)
+        const typeObj = change.data as Record<string, unknown> | null;
+        if (typeObj?.['%f3'] && typeof typeObj['%f3'] === 'object') {
+          if (!def.deepFieldStore.has(sub)) {
+            def.deepFieldStore.set(sub, new Map());
+          }
+          const fieldMap = def.deepFieldStore.get(sub)!;
+          for (const [fKey, fVal] of Object.entries(typeObj['%f3'] as Record<string, unknown>)) {
+            if (!fieldMap.has(fKey)) fieldMap.set(fKey, fVal);
+          }
+        }
       }
 
       // Deep field: user_types/<typeKey>/%f3/<fieldKey>
@@ -200,7 +211,7 @@ export class AppDefinition {
               return {
                 key: fKey,
                 name: (fObj['%d'] as string) || fKey,
-                fieldType: (fObj['%t'] as string) || 'unknown',
+                fieldType: (fObj['%t'] as string) || (fObj['%v'] as string) || 'unknown',
                 isList: (fObj['%o'] as boolean) || false,
                 raw: fRaw,
               };
@@ -225,10 +236,15 @@ export class AppDefinition {
     for (const [key, raw] of this.optionSets) {
       if (raw === null || raw === undefined) continue;
       const obj = raw as Record<string, unknown>;
+      // Options come as 'options' array (changes stream) or 'values' map (hash-loaded branch data)
+      let options: unknown[] = (obj['options'] as unknown[]) || [];
+      if (options.length === 0 && obj['values'] && typeof obj['values'] === 'object') {
+        options = Object.values(obj['values'] as Record<string, unknown>);
+      }
       result.push({
         key,
         name: (obj['%d'] as string) || key,
-        options: (obj['options'] as unknown[]) || [],
+        options,
         raw,
       });
     }
