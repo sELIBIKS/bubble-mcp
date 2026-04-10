@@ -14,6 +14,7 @@ export interface EditorConfig {
   appId: string;
   version: string; // 'test', 'live', or a branch ID (e.g. '634ss')
   cookieHeader: string;
+  hashNonces?: Record<string, string>; // path_version_hash → nonce (for branch data loading)
 }
 
 export interface BubbleRecord {

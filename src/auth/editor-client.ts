@@ -54,6 +54,7 @@ export class EditorClient {
     public readonly appId: string,
     public readonly version: string,
     private readonly cookieHeader: string,
+    private readonly hashNonces: Record<string, string> = {},
   ) {
     this.sessionId = `bubble-mcp-${Date.now()}`;
   }
@@ -69,6 +70,47 @@ export class EditorClient {
     path: string,
   ): Promise<{ last_change: number; path_version_hash?: string; data?: unknown }> {
     return this.get(`/appeditor/load_single_path/${this.appId}/${this.version}/0/${path}`);
+  }
+
+  /**
+   * Load data by path_version_hash. On branches, loadPaths returns hashes instead
+   * of data — use this to resolve the hash to actual data.
+   * Requires the correct nonce (captured during browser auth).
+   */
+  async loadByHash(
+    hash: string,
+  ): Promise<{ last_change: number; data?: unknown }> {
+    const nonce = this.hashNonces[hash];
+    if (!nonce) {
+      // No nonce available — return empty (hash can't be resolved without it)
+      return { last_change: 0, data: undefined };
+    }
+    return this.get(`/appeditor/load_single_path/${this.appId}/${this.version}/${hash}/${nonce}`);
+  }
+
+  /**
+   * Load paths, automatically resolving path_version_hashes to data.
+   * On branches, loadPaths may return hashes instead of inline data —
+   * this method fetches the actual data for each hash.
+   */
+  async loadPathsResolved(pathArrays: string[][]): Promise<LoadPathsResult> {
+    const result = await this.loadPaths(pathArrays);
+
+    // Check if any entries have only a hash (no data) — resolve them
+    const resolved = await Promise.all(
+      result.data.map(async (entry) => {
+        if (entry.data !== undefined || !entry.path_version_hash) return entry;
+        // Hash-only entry — fetch actual data
+        try {
+          const full = await this.loadByHash(entry.path_version_hash);
+          return { ...entry, data: full.data };
+        } catch {
+          return entry; // Keep hash-only if fetch fails
+        }
+      }),
+    );
+
+    return { last_change: result.last_change, data: resolved };
   }
 
   async getChanges(since: number = 0): Promise<EditorChange[]> {

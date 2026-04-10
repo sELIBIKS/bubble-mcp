@@ -157,8 +157,22 @@ export async function browserLogin(appId: string, options?: { branch?: string; v
     if (resolvedVersion) {
       editorUrl = `https://bubble.io/page?id=${appId}&tab=Design&name=index&version=${resolvedVersion}`;
     }
+
+    // Intercept network traffic to capture hash→nonce mappings for branch data loading
+    const hashNonces: Record<string, string> = {};
+    if (resolvedVersion) {
+      page.on('request', (req: { url(): string }) => {
+        const url = req.url();
+        // Match: /appeditor/load_single_path/{appId}/{version}/{hash}/{nonce}
+        const match = url.match(/\/appeditor\/load_single_path\/[^/]+\/[^/]+\/([a-f0-9]{32})\/(.+)/);
+        if (match) {
+          hashNonces[match[1]] = match[2];
+        }
+      });
+    }
+
     await page.goto(editorUrl, { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(5000); // Let editor fully initialize
+    await page.waitForTimeout(8000); // Let editor fully initialize and make data requests
 
     // Capture cookies after visiting editor
     const allCookies = await context.cookies('https://bubble.io');
@@ -167,9 +181,11 @@ export async function browserLogin(appId: string, options?: { branch?: string; v
     if (validateSession(finalCookies)) {
       authenticated = true;
       const mgr = createSessionManager();
-      mgr.save(appId, finalCookies, resolvedVersion);
+      const noncesToSave = Object.keys(hashNonces).length > 0 ? hashNonces : undefined;
+      mgr.save(appId, finalCookies, resolvedVersion, noncesToSave);
       const versionLabel = resolvedVersion ? ` (branch: ${resolvedVersion})` : '';
-      console.log(`Authenticated! ${finalCookies.length} cookies saved for app "${appId}"${versionLabel}.`);
+      const nonceCount = noncesToSave ? `, ${Object.keys(noncesToSave).length} hash mappings` : '';
+      console.log(`Authenticated! ${finalCookies.length} cookies saved for app "${appId}"${versionLabel}${nonceCount}.`);
       break;
     }
   }
